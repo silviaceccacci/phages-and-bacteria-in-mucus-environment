@@ -13,7 +13,8 @@ function [phages, bacteria, attached_phages] = compute_Attachments(phages, bacte
         if ~attached_phages(i) % Only check unattached phages
             for j = 1:num_bacteria
                 %bact = bacteria(j);
-                distance = norm(phages(i).position - bacteria(j).position);
+                %distance = norm(phages(i).position - bacteria(j).position);
+                distance = pointToSegmentDistance(phages(i).position, bacteria(j).position, bacteria(j).orientation, bacteria(j).length);
                 isAttached = (distance < d_enc1);
                 %isAttached = check_PhageToRodAttachment(phages(i).position, bacteria(j).position, lB, d_enc1);
 
