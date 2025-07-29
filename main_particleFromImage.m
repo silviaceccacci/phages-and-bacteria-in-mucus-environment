@@ -40,7 +40,7 @@ domain = [Omega_X, Omega_Y];
 %% Numerical parameters
 disp('----> Read numerical and physical parameters')
 dt = 100e-6; %100e-6; 
-num_steps = 200; 
+num_steps = 10; %200; 
 %% Physical parameters
 mu_water = 10^(-3);     % Dynamic viscosity (Pa s)
 rho_water = 10^3;       % Mass density of phage (kg/m^3)
@@ -322,11 +322,6 @@ disp('----> Plotting trajectories')
 time_vec = (0:num_steps-1) * dt;
 save_trajectories(coordP_over_time, coordB_over_time, coordC_over_time, dt, num_steps, num_phages, num_bacteria, num_clusters_k, micron, outputFolder);
 plot_trajectories_2D(coordP_over_time, coordB_over_time, coordC_over_time, num_phages, num_bacteria, num_clusters_k, micron, Omega_X, Omega_Y);
-
-% disp('----> PCA analysis of trajectories')
-% pca_cluster_trajectories(coordB_over_time);
-% pca_cluster_trajectories_2(coordC_over_time);
-% [coeff, score, explained, global_mean] = compute_globalClusterPCA(coordC_over_time, cluster_sizes_over_time);
 
 % Mean number of clusters over time
 figure;
