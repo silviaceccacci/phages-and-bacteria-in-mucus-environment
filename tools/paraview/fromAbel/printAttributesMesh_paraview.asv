@@ -1,0 +1,32 @@
+function []=printAttributesMesh_paraview(mesh,stream)
+
+    % write visualization properties   
+    if(isfield(mesh,'qualities')==false)
+        fprintf(stream,'4 1 1 1 1\n');
+        fprintf(stream,'q, None\n');
+        fprintf(stream,'x, None\n');
+        fprintf(stream,'y, None\n');
+        fprintf(stream,'z, None\n');
+        fprintf(stream,'%d %e %e %e %e \n',[1:size(mesh.T,1); mesh.quality'; mesh.CM;]);
+    else
+        fprintf(stream,'7 1 1 1 1 1 1 1\n');
+        fprintf(stream,'q, None\n');
+        fprintf(stream,'x, None\n');
+        fprintf(stream,'y, None\n');
+        fprintf(stream,'z, None\n');
+        fprintf(stream,'IdGeo, None\n');
+        fprintf(stream,'IdIni, None\n');
+        fprintf(stream,'ScJac, None\n');
+        size(1:size(mesh.T,1))
+        size(mesh.qualities.IdGeo)
+        size(mesh.quality)
+        
+        fprintf(stream,'%d %e %e %e %e %e %e %e \n',...
+            [1:size(mesh.T,1); mesh.quality'; mesh.CM;...
+            mesh.qualities.IdGeo';...
+            mesh.qualities.IdIni';...
+            mesh.qualities.ScJac']);
+    end     
+    
+    
+end

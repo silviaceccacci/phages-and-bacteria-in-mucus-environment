@@ -1,0 +1,15 @@
+MeshVersionFormatted 0
+
+Dimension 2
+
+Vertices 
+4
+ -1 -1 0
+ 1 -1 0
+ 1 1 0
+ -1 1 0
+
+Triangles
+2
+1 2 3 0
+3 4 1 0

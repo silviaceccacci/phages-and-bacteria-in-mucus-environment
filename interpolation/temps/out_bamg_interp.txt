@@ -1,0 +1,16 @@
+g v1.02 :  Modification of a adpated mesh ./interpolation/temps/temp_in.msh    with less than 50000 vertices
+  -- ReadMesh ./interpolation/temps/temp_in.msh Version = 0
+ ## Warning: Mesh without geometry we construct a geometry (theta =-57.2958 degres )
+  -- construction of the geometry from the 2d mesh 
+  -- IntersectGeomMetric geometric err=0.1 aniso 
+  -- Limit the subdivision of a edges in the new mesh by 10
+  -- BoundAnisotropy by  1e+06
+  -- ReadMesh ./interpolation/temps/temp_out.msh Version = 0
+ ## Warning: Mesh without geometry we construct a geometry (theta =-57.2958 degres )
+  -- construction of the geometry from the 2d mesh 
+ Cpu time for meshing          : 0.073784s  Nb Vertices/s = 351309
+ -- interpolation P1  files : ./interpolation/temps/temp_sol.bb -> ./interpolation/temps/temp_sol_interp.bb
+nb of field BB 0
+ Cpu time for interpolation 0.06699 s
+ Cpu time for meshing with io  : 0.14256s  Nb Vertices/s = 181825
+ Nb vertices = 25921 Nb Triangles = 51200

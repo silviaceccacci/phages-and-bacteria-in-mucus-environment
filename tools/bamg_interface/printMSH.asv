@@ -1,0 +1,155 @@
+function [fullName] = printMSH(fileName,mesh,doPeriodic,path_temps)
+
+    %do_printPeriodic = false;
+    do_printPeriodic = doPeriodic;
+
+    if(size(mesh.X,1)>size(mesh.X,2))
+        mesh.X = mesh.X';
+    end
+
+    if(do_printPeriodic) 
+        disp('should ensure a periodic mesh being generated')
+        Xcorners = [ min(mesh.X(:,1))  min(mesh.X(:,2)) ];
+        Xcorners = [ Xcorners
+                     max(mesh.X(:,1))  min(mesh.X(:,2)) ];
+        Xcorners = [ Xcorners
+                     max(mesh.X(:,1))  max(mesh.X(:,2)) ];
+        Xcorners = [ Xcorners
+                     min(mesh.X(:,1))  max(mesh.X(:,2)) ];
+        Xcorners = Xcorners';
+        geoName = [path_temps 'rectangle_periodic.geo'];
+        printGeoMsh_periodicRectangle(geoName,Xcorners)
+    end
+
+    if(strcmp(fileName(end-3:end),'.msh'))
+        fullName = fileName;
+    else
+        fullName = [fileName '.msh'];
+    end
+
+    stream = fopen(fullName,'w');
+    
+    fprintf(stream,'MeshVersionFormatted 0\n\n');
+    fprintf(stream,'Dimension 2\n');
+
+    if(do_printPeriodic) 
+        disp('Include here the geometry, and link periodic edges of background mesh...')
+        fprintf(stream,'\nGeometry \n');
+        fprintf(stream, ['"' geoName '"']);
+        fprintf(stream,'\n');
+    end
+
+    fprintf(stream,'\nVertices\n%d\n',size(mesh.X,2));
+    fprintf(stream,'%f %f %d\n', [mesh.X; zeros(1,size(mesh.X,2))]);
+    fprintf(stream,'\nTriangles\n%d\n',size(mesh.T,1));
+    fprintf(stream,'%d %d %d %d\n', [ mesh.T';  zeros(1,size(mesh.T,1))]);
+
+    if(do_printPeriodic)
+        disp('Here link mesh noes/edges with geometry')
+        printMeshWithGeometry(stream,mesh,Xcorners')
+    end
+       
+    fprintf(stream,'\nEnd\n');
+
+    fclose(stream);
+
+end
+
+
+function [] = printMeshWithGeometry(stream,mesh,Xcorners)
+tol = 1e-12;
+% VertexOnGeometricVertex 
+% 4
+% 1 1 
+% 2 2
+fprintf(stream,'\nVertexOnGeometricVertex\n%d\n',size(Xcorners,1));
+mesh
+listNodes = 1:size(mesh.X,2);
+X = mesh.X';
+nodeId_corners = [];
+for i=1:4
+    v = [X(:,1)-Xcorners(i,1),X(:,2)-Xcorners(i,2)];
+    d = sqrt(sum(v.*v,2));
+    [minD,nodeId] = min(d);
+    if(minD<tol)
+        fprintf(stream,'%d %d\n', [ nodeId;  i]);
+        listNodes = setdiff(listNodes,nodeId);
+        nodeId_corners = [nodeId_corners; nodeId];
+    else
+        Xcorners(i,:)
+        minD
+        error('not found corner')
+    end
+end
+
+node_geoData = zeros(size(mesh.X,2),1);
+node_geoData(nodeId_corners) = -1*( 1:4 );
+
+x0=min(Xcorners(:,1));
+y0=min(Xcorners(:,2));
+x1=max(Xcorners(:,1));
+y1=max(Xcorners(:,2));
+listNodesGeo = [];
+listNodesGeoId = [];
+for j=1:length(listNodes)
+    i = listNodes(j);
+    p = mesh.X(:,i);
+    x = p(1); y = p(2);
+    isLeft = x<x0+tol;
+    isRight= x>x1-tol;
+    isDown = y<y0+tol;
+    isUp   = y>y1-tol;
+    idBound = 0;
+    if(isLeft)
+        idBound = 4;
+    elseif(isRight)
+        idBound = 2;
+    elseif(isDown)
+        idBound = 1;
+    elseif(isUp)
+        idBound = 3;
+    end
+    isBound = idBound>0;
+    if(isBound)
+        listNodesGeo = [listNodesGeo i];
+        listNodesGeoId = [listNodesGeoId idBound];
+        node_geoData(i) = idBound;
+    end
+end
+
+fprintf(stream,'\n');
+
+% numEdgeNodes = length(listNodesGeoId);
+% fprintf(stream,'\nVertexOnGeometricEdge\n%d\n',numEdgeNodes);
+% for j=1:length(listNodesGeo)
+%     nodeId = listNodesGeo(j);
+%     idGeoEdge = listNodesGeoId(j);
+%     fprintf(stream,'%d %d\n', [ nodeId;  idGeoEdge]);
+% end
+% fprintf(stream,'\n');
+
+% EdgeOnGeometricEdge
+% 4
+% 1 1
+% 2 2
+% 3 3
+% 4 4
+
+element.type = 'tri';
+element.numVertices = 3; element.numEdges = 3; element.order = 1;
+[boundNodes,bElems,bEdges] = giveBoundaryFromConnectivity(...
+    mesh.T,size(mesh.X,2),element);
+
+
+numEdges = length(bElems);
+fprintf(stream,'\nEdgeOnGeometricEdge\n%d\n',numEdges);
+for iedge=1:length(listNodesGeo)
+    nodes = getEdge(mesh.T(iedge,:),element,bEdges(iedge));
+    idGeoEdge = max(node_geoData);
+    if(idGeoEdge<1)
+        error('n')
+    fprintf(stream,'%d %d\n', [ nodeId;  idGeoEdge]);
+end
+fprintf(stream,'\n');
+
+end

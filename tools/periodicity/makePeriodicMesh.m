@@ -1,0 +1,110 @@
+function periodicMesh = makePeriodicMesh(mesh,hmin)
+    % Enforce periodicity for a mesh on a rectangle with dimensions Lx x Ly.
+    %
+    % Input:
+    %   mesh - A struct with fields:
+    %       mesh.X - Nx2 array of coordinates [x, y].
+    %       mesh.T - MxK array of connectivity (K nodes per element).
+    %
+    % Output:
+    %   periodicMesh - A struct with the same fields as mesh but with
+    %                  periodic boundaries enforced.
+    
+    % Extract coordinates and connectivity
+    X = mesh.X;
+            
+    x0=min(X(:,1));
+    y0=min(X(:,2));
+    x1=max(X(:,1));
+    y1=max(X(:,2));
+    Lx = x1-x0;
+    Ly = y1-y0;
+
+    X(:,1) = X(:,1)-x0;
+    X(:,2) = X(:,2)-y0;
+
+    % Tolerance for floating-point comparisons
+    tol = 1e-10;
+
+    % Identify boundary nodes
+    leftNodes = find(abs(X(:, 1)) < tol);        % x = 0
+    rightNodes = find(abs(X(:, 1) - Lx) < tol);  % x = Lx
+    bottomNodes = find(abs(X(:, 2)) < tol);      % y = 0
+    topNodes = find(abs(X(:, 2) - Ly) < tol);    % y = Ly
+
+    % Add missing nodes on the left/right and top/bottom boundaries
+    % Match the spacing of nodes on each side
+    newLeftY = setdiff(X(rightNodes, 2), X(leftNodes, 2), 'stable');
+    newRightY = setdiff(X(leftNodes, 2), X(rightNodes, 2), 'stable');
+    newBottomX = setdiff(X(topNodes, 1), X(bottomNodes, 1), 'stable');
+    newTopX = setdiff(X(bottomNodes, 1), X(topNodes, 1), 'stable');
+
+    % Insert new nodes into X
+    newLeftNodes = [zeros(length(newLeftY), 1), newLeftY];
+    newRightNodes = [Lx * ones(length(newRightY), 1), newRightY];
+    newBottomNodes = [newBottomX, zeros(length(newBottomX), 1)];
+    newTopNodes = [newTopX, Ly * ones(length(newTopX), 1)];
+
+    % Update coordinates with new boundary nodes
+    X = [X; newLeftNodes; newRightNodes; newBottomNodes; newTopNodes];
+
+    % Collapse by tol
+    leftNodes = find(abs(X(:, 1)) < tol);        % x = 0
+    rightNodes = find(abs(X(:, 1) - Lx) < tol);  % x = Lx
+    bottomNodes = find(abs(X(:, 2)) < tol);      % y = 0
+    topNodes = find(abs(X(:, 2) - Ly) < tol);    % y = Ly
+    
+    rtol = hmin*0.5;%1e-1;
+        
+    %p_toInsert  = [];
+    %p_toInsert = [p_toInsert, (p(i)+p(i-1))/2];
+    id_toRemove = [];
+    fixDim = 2;
+    p = X(leftNodes,fixDim);
+    [p,index] = sort(p);
+    
+    for i=2:length(leftNodes)
+        if( p(i)-p(i-1)<rtol )
+            if(i>2)
+                id_toRemove = [id_toRemove, i-1];
+            else
+                id_toRemove = [id_toRemove, i];
+            end
+        end
+    end
+    left_toRemove = leftNodes(index(id_toRemove));
+   
+    p = X(rightNodes,fixDim);
+    [p,index] = sort(p);
+    
+    rigth_toRemove = rightNodes(index(id_toRemove));
+
+    id_toRemove = [];
+    fixDim = 1;
+    p = X(bottomNodes,fixDim);
+    [p,index] = sort(p);
+    for i=2:length(bottomNodes)
+        if( p(i)-p(i-1)<rtol )
+            if(i>2)
+                id_toRemove = [id_toRemove, i-1];
+            else
+                id_toRemove = [id_toRemove, i];
+            end
+        end
+    end
+    bot_toRemove = bottomNodes(index(id_toRemove));
+   
+    p = X(topNodes,fixDim);
+    [p,index] = sort(p);
+    top_toRemove = topNodes(index(id_toRemove));
+
+    list_toRemove = [rigth_toRemove;left_toRemove;top_toRemove;bot_toRemove];
+    X(list_toRemove,:) = [];
+
+    % Create topology
+    T = delaunay(X);
+
+    % Output periodic mesh
+    periodicMesh.X = X;
+    periodicMesh.T = T;
+end

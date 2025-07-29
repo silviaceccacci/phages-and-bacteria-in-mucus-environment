@@ -1,0 +1,156 @@
+function p = orthopoly2D_quad(x,nDeg,element)
+
+    [p_x]  = orthopoly1D(x(:,1), nDeg); 
+    [p_y]  = orthopoly1D(x(:,2), nDeg);
+   
+    numNod = element.numNod;
+    p = zeros(numNod, size(p_x,2)); 
+    count = 0;
+    for ix = 1:size(p_x,1) %nDeg+1
+        for iy = 1:size(p_y,1) %nDeg+1
+            count = count+1;
+            p(count,:)        =  p_x(ix,:).*   p_y(iy,:)  ;
+        end
+    end
+    
+end
+% function p = orthopoly2D_quad(x,nDeg,element)
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % x: points where we want to evaluade the shape functions
+% % nDeg: polynomial degree
+% % element: element information of the approximation (order, distribution..)
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% 
+%     n = giveNumNodesElementFromOrder_quad(nDeg);
+% 
+%     xFactor = 1e6;
+%     xMod = round( x * xFactor ); 
+%     coord_x = unique(xMod(:,1)) ./xFactor;
+%     coord_y = unique(xMod(:,2)) ./xFactor;
+%   
+%     p_x = orthopoly1D(coord_x, nDeg); % returns matrix (sqrt(n),size(x,1))
+%     p_y = orthopoly1D(coord_y, nDeg); % returns matrix (sqrt(n),size(x,1))
+%     
+%     p = zeros(n,size(x,1));
+%     count = 0;
+%     for ix = 1:size(p_x,1) %nDeg+1
+%         for iy = 1:size(p_y,1) %nDeg+1
+%             count = count+1;
+%             p(count,:) = reshape( ( p_x(ix,:)'*p_y(iy,:) ) , 1, size(p,2) );
+%         end
+%     end
+%     
+%     
+%     %% Reorder node location 
+%    
+%     coordRef = giveReferencePoints_quad(element);
+%     [coordRefSorted , index0] = sortrows([coordRef(:,1)  coordRef(:,2)]);
+%     index = zeros(size(index0));
+%     for iaux = 1:length(index0)
+%         index(iaux) = find(iaux == index0);
+%     end
+% %     coordRef  == coordRefSorted(index,:)
+% %     coordRef(index0,:) ==    coordRefSorted
+% 
+%     p        = p(index,:);
+%     
+%     %% Reorder gauss points locations to be in quadrilateral order
+%     % so that it can be added with the corresponding gauss weight
+%     % no se si aixo esta be aixi o si iy i ix no han danar girats
+%     x2 = zeros(size(x));
+%     count = 0;
+%     for iy = 1:size(coord_y,1) % sqrt(gauss)
+%         for ix = 1:size(coord_x,1) % sqrt(gauss)
+%             count = count+1;
+%             x2(count,:) = [coord_x(ix) coord_y(iy)];
+%         end
+%     end
+%     
+%     listOrder = zeros(size(x,1),1);
+%     for aux = 1:size(x,1)
+%          ind1 = find(abs(x2(:,1)-x(aux,1))<1/xFactor);
+%          listOrder(aux) = ind1( find(abs(x2(ind1,2)-x(aux,2))<1/xFactor) );
+%     end
+%     
+%     p        = p(:,listOrder);
+% end
+% 
+% %%
+% % function p = orthopoly2D_quad(x,nDeg,element)
+% % 
+% % 
+% %     n = giveNumNodesElementFromOrder_quad(nDeg);
+% % 
+% %     coord_x = unique(x(:,1));
+% %     coord_y = unique(x(:,2));
+% % 
+% %     p_x = orthopoly1D(coord_x, nDeg); % returns matrix (sqrt(n),size(x,1))
+% %     p_y = orthopoly1D(coord_y, nDeg); % returns matrix (sqrt(n),size(x,1))
+% %     
+% % % size(p_x)
+% % % pause()
+% %     p = zeros(n,size(x,1));
+% % %     x2 = zeros(size(x));
+% %     count = 0;
+% %     for ix = 1:size(p_x,1) %nDeg+1
+% %         for iy = 1:size(p_y,1) %nDeg+1
+% %             count = count+1;
+% %             p(count,:) = reshape( ( p_x(ix,:)'*p_y(iy,:) ) , 1, size(p,2) );
+% % %             x2(count,:) = [coord_x(ix) coord_y(iy)];
+% %         end
+% %     end
+% %     
+% % %     % no se si aixo esta be aixi o si iy i ix no han danar girats
+% % %     x2 = zeros(size(x));
+% % %     count = 0;
+% % %     for ix = 1:size(p_y,1) %nDeg+1
+% % %         for iy = 1:size(p_x,1) %nDeg+1
+% % %             count = count+1;
+% % %             x2(count,:) = [coord_x(ix) coord_y(iy)];
+% % %         end
+% % %     end
+% % % 
+% % %     
+% % %     listOrder = zeros(size(x,1),1);
+% % %     for aux = 1:size(x,1)
+% % %          ind1 = find(x(aux,1) ==x2(:,1));
+% % %          listOrder(aux) = ind1( find(x(aux,2) ==x2(ind1,2)) );
+% % %     end
+% % %     p = p(:,listOrder);
+% % % %     p = p(listOrder,:);
+% %         
+% % end
+% %%
+% 
+% 
+% %     listOrder = zeros(size(x,1),1);
+% %     for aux = 1:size(x,1)
+% %          ind1 = find(x(:,1) ==x2(aux,1));
+% %          listOrder(aux) = ind1( find(x(ind1,2) ==x2(aux,2)) );
+% %     end
+% 
+% %%
+% %     n = giveNumNodesElementFromOrder_quad(nDeg);
+% % 
+% %     coord_x = unique(x(:,1));
+% %     coord_y = unique(x(:,2));
+% % 
+% %     p_x = orthopoly1D(coord_x, nDeg); % returns matrix (sqrt(n),size(x,1))
+% %     p_y = orthopoly1D(coord_y, nDeg); % returns matrix (sqrt(n),size(x,1))
+% %     
+% %     p = zeros(n,size(x,1));
+% %     count = 0;
+% %     for ix = 1:size(p_x,1) %nDeg+1
+% %         for iy = 1:size(p_y,1) %nDeg+1
+% %             count = count+1;
+% %             p(count,:) = reshape( p_x(ix,:)'*p_y(iy,:) , 1, size(p,2) );
+% %         end
+% %     end
+% %     
+% %     
+% %     % POTSER S'HA DE REORDENAR P  PER A QUE QUEDI EN LORDRE DE X O POTSER
+% %     % NO CAL, ARA NO ESTIC SEGUR
+% 
+% %%
+% % com ho fem per a que p(node,:) estigui ordenat com coord(:,dim)

@@ -1,0 +1,85 @@
+function [mesh1D] = getEdgeCurves(mesh)
+global factorIncreaseOrder;
+    X=mesh.X; T=mesh.T; element=mesh.element; CM = mesh.CM; Q = mesh.quality;
+    faceNodes = faceNodes_aux(element);
+    [nOfFaces,nOfNodesPerFace] = size(faceNodes);
+    oFaceNodes = zeros(1,nOfFaces*(nOfNodesPerFace-1));
+    np = nOfNodesPerFace - 1;
+    aux = 1 - np;
+    aux2 = 0;
+    for iface = 1:nOfFaces
+       aux = aux + np;
+       aux2 = aux2 + np;
+       oFaceNodes(aux:aux2) = faceNodes(iface,1:np);
+    end
+    patchFaces = T(:,oFaceNodes);
+    [p_order]=element.order;
+%     element.distribution = 'equispaced';
+    feketeDistribution = strcmp(element.distribution,'fekete');
+    [shapeFunctions] = getHOcurve_preComputations(...
+        p_order,0,feketeDistribution,factorIncreaseOrder);
+    newNumPointsEdge=size(shapeFunctions,2);
+    X1D = zeros(3,newNumPointsEdge*element.numEdges*size(T,1));
+    CM1D = zeros(3,newNumPointsEdge*element.numEdges*size(T,1));
+    T1D = zeros(newNumPointsEdge*element.numEdges*size(T,1),2);
+    Q1D = zeros(newNumPointsEdge*element.numEdges*size(T,1),1);
+    if(isfield(mesh,'qualities'))
+       qualitiesSubelements.IdGeo =  zeros(size(Q1D));
+       qualitiesSubelements.IdIni =  zeros(size(Q1D));
+       qualitiesSubelements.ScJac =  zeros(size(Q1D));
+    end
+    countX = 0;
+    countT = 0;
+    for i=1:size(T,1)
+        countT = countT+1; countX = countX+1;
+        face1=patchFaces(i, (1:(np+1))            );
+        [physicalPoints1]= getHOcurve (p_order,face1,X,shapeFunctions);
+        face2=patchFaces(i, ((np+1):(2*np+1))     );
+        [physicalPoints2]= getHOcurve (p_order,face2,X,shapeFunctions);
+%         face3=patchFaces(i,[  (2*np+1):(3*np) 1  ]      ) ;
+%         [physicalPoints3]= getHOcurve (p_order,face3,X,shapeFunctions);
+%         physicalPoints = [ physicalPoints1 physicalPoints2 physicalPoints3 ];
+        if(nOfFaces == 3)
+            face3=patchFaces(i,[  (2*np+1):(3*np) 1  ]      ) ;
+            [physicalPoints3]= getHOcurve (p_order,face3,X,shapeFunctions);
+            physicalPoints = [ physicalPoints1 physicalPoints2 physicalPoints3 ]';
+        elseif(nOfFaces == 4)
+            face3=patchFaces(i,[ (2*np+1):(3*np+1) ]      ) ;
+            [physicalPoints3]= getHOcurve (p_order,face3,X,shapeFunctions);
+            physicalPoints = [ physicalPoints1 physicalPoints2 physicalPoints3 ]';
+            face4=patchFaces(i,[ (3*np+1):(4*np) 1 ]      ) ;
+            [physicalPoints4]= getHOcurve (p_order,face4,X,shapeFunctions);
+            physicalPoints = [physicalPoints; physicalPoints4'];  
+        end
+        physicalPoints =physicalPoints';
+        countXn = countX-1+ size(physicalPoints,2);
+        X1D(:,countX:countXn)= physicalPoints;
+        countTn = countT-1+ size(physicalPoints,2)-1;
+        T1D(countT:countTn,:)= [ (countX:(countXn-1))' ((countX+1):countXn)'];
+        CM1D(:,countT:countTn) = CM(:,i)*ones(1,length(countT:countTn));
+        Q1D(countT:countTn)= Q(i);
+        if(isfield(mesh,'qualities'))
+           qualitiesSubelements.IdGeo(countT:countTn) =  mesh.qualities.IdGeo(i);
+           qualitiesSubelements.IdIni(countT:countTn) =  mesh.qualities.IdIni(i);
+           qualitiesSubelements.ScJac(countT:countTn) =  mesh.qualities.ScJac(i);
+        end
+        countT = countTn;
+        countX = countXn;
+    end
+    X1D = X1D(:,1:countXn);
+    T1D = T1D(1:countTn,:);
+    CM1D = CM1D(:,1:countTn);
+    Q1D = Q1D(1:countTn);
+       if(isfield(mesh,'qualities'))
+           qualitiesSubelements.IdGeo(countT:countTn) =  mesh.qualities.IdGeo(i);
+           qualitiesSubelements.IdIni(countT:countTn) =  mesh.qualities.IdIni(i);
+           qualitiesSubelements.ScJac(countT:countTn) =  mesh.qualities.ScJac(i);
+        end
+    mesh1D.X = X1D;
+    mesh1D.T = T1D;
+    mesh1D.CM = CM1D;
+    mesh1D.quality = Q1D;
+    if(isfield(mesh,'qualities'))
+       mesh1D.qualities = qualitiesSubelements;
+    end
+end

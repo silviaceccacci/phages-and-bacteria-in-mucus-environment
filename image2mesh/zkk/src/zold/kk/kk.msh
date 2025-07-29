@@ -1,0 +1,56 @@
+MeshVersionFormatted 0
+
+Dimension
+2
+
+Identifier
+"G=cons from: square.msh;2, Date: 16/02/25 11:52 57s"
+
+Geometry
+"kk.msh.gmsh"
+
+Vertices
+4
+-1 -1 0
+1 -1 0
+1 1 0
+-1 1 0
+
+Edges
+4
+2 3 0
+1 2 0
+4 1 0
+3 4 0
+
+Triangles
+2
+1 2 3 0
+3 4 1 0
+
+SubDomainFromMesh
+1
+3 1 1 0
+
+SubDomainFromGeom
+1
+2 1 1 0
+
+VertexOnGeometricVertex
+4
+ 1 1
+ 2 2
+ 3 3
+ 4 4
+
+VertexOnGeometricEdge
+0
+
+EdgeOnGeometricEdge
+4
+1 1
+2 2
+3 3
+4 4
+
+End

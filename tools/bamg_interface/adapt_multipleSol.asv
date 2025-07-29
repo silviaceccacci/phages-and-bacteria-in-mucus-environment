@@ -1,0 +1,52 @@
+function [Xh,Th,sol] = adapt_multipleSol(X,T,data,adapt_variable,sol,doPeriodic)
+
+    path_temps = './image2mesh/temps/';
+
+    [bamg_exe]=get_bamg_exe();
+
+    fileName_mesh_input = [path_temps 'temp_mesh_input'];
+    mesh.X = X';
+    mesh.T = T;
+    fn_mesh_inp  = printMSH(fileName_mesh_input,mesh);
+    
+    fn_mesh_out0 = [path_temps  'temp_mesh_output'];
+    fn_mesh_out  = [fn_mesh_out0 '.msh'];
+
+    fn_sol_inp      = [path_temps 'temp_multiSol_inpput.bb'];
+    fn_sol_out      = [path_temps 'temp_multiSol_output.bb'];
+    
+    if adapt_variable.f == 1
+        target_sol = [sol.f];
+    else
+        error('not implemented strategy')
+    end 
+    printMultipleSOL(fn_sol_inp,target_sol);
+    
+    if(doPeriodic) 
+        geo_input = ' -g rectangle_periodic.geo';
+    else
+        geo_input = ' ';
+    end
+
+    [adaptativeStep]=createBamgString(bamg_exe,fn_mesh_inp,fn_mesh_out,...
+        fn_sol_inp,data,fn_sol_out,geo_input);
+
+    fn_out_bamg = [path_temps 'out_bamg_adapt.txt'];
+    adaptativeStep = [adaptativeStep ' > ' fn_out_bamg ];
+    disp(adaptativeStep)
+    eval(adaptativeStep)
+    
+    mesh = readBAMGmsh(fn_mesh_out0);
+    
+    Xh = mesh.X';
+    Th = mesh.T;
+
+    sol.f = readBAMGbb(fn_sol_out);
+    sol.f = sol.f';
+    
+    delete(fn_mesh_inp);
+    delete(fn_mesh_out);
+    delete(fn_sol_out);  
+    %delete(fn_out_bamg);
+    
+end
