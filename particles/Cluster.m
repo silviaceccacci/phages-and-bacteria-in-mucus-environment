@@ -1,4 +1,4 @@
-classdef Cluster
+ classdef Cluster
 
     properties
         position

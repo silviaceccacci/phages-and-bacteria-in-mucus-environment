@@ -15,6 +15,8 @@ classdef Phage
         is_attached
         attached_bacterium
         attached_cluster
+        relative_position_wrt_bact
+        relative_position_wrt_com
     end
     
     methods

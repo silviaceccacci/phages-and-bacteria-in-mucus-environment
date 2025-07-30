@@ -17,17 +17,14 @@ function [phages, bacteria, attached_phages] = compute_Attachments(phages, bacte
                 %isAttached = check_PhageToRodAttachment(phages(i).position, bacteria(j).position, lB, d_enc1);
 
                 if isAttached
-                    %phages(i).relative_position_wrt_bact = phages(i).position - bacteria(j).position; %Delta = x1' - x1
-                    %rel_pos = phages(i).relative_position_wrt_bact;
-                    %phages(i).position = bacteria(j).position + rel_pos; %x1' = x1 + Delta
-                    phages(i).position = bacteria(j).position;
+                    phages(i).relative_position_wrt_bact = phages(i).position - bacteria(j).position; %Delta
+                    rel_pos = phages(i).relative_position_wrt_bact;
+                    phages(i).position = bacteria(j).position + rel_pos; %x1' = 
+                    %phages(i).position = bacteria(j).position;
 
                     phages(i).velocity = bacteria(j).velocity;
                     phages(i).is_attached = true;
-                    if ~ismember(phages(i).id, bacteria(j).phages_ids)
-                        bacteria(j).phages_ids(end+1) = phages(i).id;
-                    end
-                    %bacteria(j).phages_ids(end+1) = phages(i).id;
+                    bacteria(j).phages_ids(end+1) = phages(i).id;
                     phages(i).attached_bacterium = bacteria(j).id;
 
                     % Record attachment info
@@ -79,16 +76,15 @@ function [phages, bacteria, attached_phages] = compute_Attachments(phages, bacte
                 [min_dist, idx] = min(distances);
 
                 if min_dist < d_enc2
-                    %phages(i).relative_position_wrt_bact = phages(i).position - bacteriaInCluster(idx).position;
-                    %rel_pos = phages(i).relative_position_wrt_bact;
-                    %phages(i).position = bacteriaInCluster(idx).position + rel_pos;
-                    phages(i).position = bacteriaInCluster(idx).position;
+                    phages(i).relative_position_wrt_bact = phages(i).position - bacteriaInCluster(idx).position;
+                    rel_pos = phages(i).relative_position_wrt_bact;
+                    phages(i).position = bacteriaInCluster(idx).position + rel_pos;
+                    %phages(i).position = bacteriaInCluster(idx).position;
 
                     phages(i).velocity = bacteriaInCluster(idx).velocity;
                     phages(i).is_attached = true;
                     phages(i).attached_bacterium = idx;
 
-                    attachment_info{c};
                     if isempty(attachment_info{c})
                         attachment_info{c} = i;
                     else
