@@ -10,10 +10,9 @@ addpath('./output')
 disp('--------------------------------------------------------------------------------------------------------------')
 disp('TODO')
 disp(' - Particles solver:')
-disp('   - count how many phages are attached to each bacterium (single o cluster)')
-disp('   - condense dynamics in function evolveLangevin for phages and bacteria')
 disp('   - adjust plot for phages such that they do not overlap when attached')
 disp('   - phage attached change colour')
+disp('   - clusters problem with periodic boundary conditions')
 disp('--------------------------------------------------------------------------------------------------------------')
 %% Define the folder to save all the files
 outputFolder = './output/';
@@ -53,7 +52,7 @@ rhoP = 10^5*rho_water;          % Mass density of phage (kg/m^3)
 d_enc1 = rP;                    % Encounter distance for pha-bac attachemnt (lyse)
 d_enc2 = rP;                    % Encounter distance for pha-bacInCl attachemnt (lyse)
 d_enc3 = rP;                    % Encounter distance for pha-COMcl attachemnt (lyse)
-num_phages = 200;
+num_phages = 50;
 for i = 1:num_phages
     phages(i) = Phage(rP, rhoP, mu_water, kB, T, dt, domain, x_min, y_min, x_max, y_max);
     phages(i).id = i;
@@ -67,7 +66,7 @@ vB = 25 * micron;                       % Velocity of bacterium in run phase (m/
 omega_T = 0.5;                          % Tumble frequency (1/s)
 epsilon = 10 * kB * T;                  % Phage-bacteria iteraction strength
 crit_distance_bacteria = 0.5 * micron;  % Encounter distance for bacteria-bacteria attachemnt (biofilm formation)
-num_bacteria = 20;
+num_bacteria = 15;
 for i = 1:num_bacteria
     bacteria(i) = Bacterium(lB, wB, rhoB, mu_water, kB, T, dt, vB, omega_T, domain, ...
         x_min, y_min, x_max, y_max);
@@ -206,7 +205,7 @@ for k = 1:num_steps
 
     disp('-------> Compute attachemnts')
     last_time_step = (k == num_steps); 
-    [phages, bacteria, attached_phages] = compute_Attachments(phages, bacteria, clusters, lB, d_enc1, d_enc2, d_enc3, last_time_step, outputFolder); 
+    [phages, bacteria, attached_phages] = compute_attachments(phages, bacteria, clusters, lB, d_enc1, d_enc2, d_enc3, last_time_step, outputFolder); 
 
 %    fprintf('At time t = %6f, phage attachments:\n', k*dt);
     for i = 1:length(bacteria)
