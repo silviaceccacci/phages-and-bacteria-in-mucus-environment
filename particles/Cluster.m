@@ -89,6 +89,17 @@
                 %rel_pos = c.bacteria(i).position - c.position; % relative to old COM
                 c.bacteria(i).position = c.position + rel_pos; % shifted with new COM
                 c.bacteria(i).velocity = c.velocity; % move with cluster
+
+                if c.bacteria(i).position(1) < x_min
+                    c.bacteria(i).position(1) = c.bacteria(i).position(1) + domain(1);
+                elseif c.bacteria(i).position(1) > x_max
+                    c.bacteria(i).position(1) = c.bacteria(i).position(1) - domain(1);
+                end
+                if c.bacteria(i).position(2) < y_min
+                    c.bacteria(i).position(2) = c.bacteria(i).position(2) + domain(2);
+                elseif c.bacteria(i).position(2) > y_max
+                    c.bacteria(i).position(2) = c.bacteria(i).position(2) - domain(2);
+                end
             end
 
             if c.position(1) < x_min

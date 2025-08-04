@@ -1,4 +1,4 @@
-function [phages, bacteria, attached_phages] = compute_attachments(phages, bacteria, clusters, lB, d_enc1, d_enc2, d_enc3, last_time_step, outputFolder)
+function [phages, bacteria, attached_phages] = compute_attachments(phages, bacteria, clusters, d_enc1, d_enc2, d_enc3, last_time_step, outputFolder)
    
     %% Compute bacteria-phage attachment
     num_phages = length(phages);
