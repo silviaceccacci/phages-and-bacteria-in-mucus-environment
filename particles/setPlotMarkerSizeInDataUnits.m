@@ -11,8 +11,8 @@ function setPlotMarkerSizeInDataUnits(hPlot, desiredDiameterInDataUnits)
     set(ax, 'Units', originalUnits);  % restore
 
     % Get axis limits and ranges
-    xLimits = xlim(ax)
-    yLimits = ylim(ax)
+    xLimits = xlim(ax);
+    yLimits = ylim(ax);
     xRange = diff(xLimits);
     yRange = diff(yLimits);
 

@@ -4,7 +4,6 @@ addpath('./particles')
 addpath('./fluid')
 addpath('./fluid/solverNS/')
 addpath('./interpolation')
-addpath('./postprocess') 
 addpath('./output')
 %% TODOs:
 disp('--------------------------------------------------------------------------------------------------------------')
@@ -35,10 +34,14 @@ load([case_name '_pressGrad_uInterp'])
 Omega_X = x_max - x_min; 
 Omega_Y = y_max - y_min; 
 domain = [Omega_X, Omega_Y];
+
+minDarcyNum = 1e-3; 
+maxDarcyNum = 1e14; 
+DeltaK = maxDarcyNum - minDarcyNum;
 %% Numerical parameters
 disp('----> Read numerical and physical parameters')
-dt = 100e-6; %100e-6; 
-num_steps = 50;  %500
+dt = 100e-6; 
+num_steps = 500; %1000;
 %% Physical parameters
 mu_water = 10^(-3);     % Dynamic viscosity (Pa s)
 rho_water = 10^3;       % Mass density of phage (kg/m^3)
@@ -49,9 +52,9 @@ disp('----> Initialise phages')
 rP = 100 * nano;                % Radius of phage (m)
 rhoP = 10^5*rho_water;          % Mass density of phage (kg/m^3)
 d_enc1 = rP;                    % Encounter distance for pha-bac attachemnt (lyse)
-d_enc2 = rP;                    % Encounter distance for pha-bacInCl attachemnt (lyse)
-d_enc3 = rP;                    % Encounter distance for pha-COMcl attachemnt (lyse)
-num_phages = 200;
+d_enc2 = rP/2;                    % Encounter distance for pha-bacInCl attachemnt (lyse)
+d_enc3 = rP/2;                    % Encounter distance for pha-COMcl attachemnt (lyse)
+num_phages = 400;
 for i = 1:num_phages
     phages(i) = Phage(rP, rhoP, mu_water, kB, T, dt, domain, x_min, y_min, x_max, y_max);
     phages(i).id = i;
@@ -64,8 +67,9 @@ rhoB = 5*10^3*rho_water;                % Mass density of bacterium (kg/m^3)
 vB = 25 * micron;                       % Velocity of bacterium in run phase (m/s)
 omega_T = 0.5;                          % Tumble frequency (1/s)
 epsilon = 10 * kB * T;                  % Phage-bacteria iteraction strength
-crit_distance_bacteria = 0.5 * micron;  % Encounter distance for bacteria-bacteria attachemnt (biofilm formation)
-num_bacteria = 30;
+crit_distance_bacteria = 1 * micron;    % Encounter distance for bacteria-bacteria attachemnt (biofilm formation)
+num_bacteria = 15;
+max_num_bacteria = num_bacteria;
 for i = 1:num_bacteria
     bacteria(i) = Bacterium(lB, wB, rhoB, mu_water, kB, T, dt, vB, omega_T, domain, ...
         x_min, y_min, x_max, y_max);
@@ -77,6 +81,7 @@ disp('----> Initialise clusters at initial configuration')
 threshold = 0.5 * micron;
 [clusters, bacteria] = Cluster.form_clusters(bacteria, threshold, domain, x_min, y_min, x_max, y_max);
 
+% Print formed clusters
 fprintf('Formed %d clusters\n', length(clusters));
 for i = 1:length(clusters)
     fprintf('Cluster %d: %d bacteria\n', i, clusters(i).size);
@@ -86,6 +91,7 @@ end
 
 for i = 1:length(clusters) 
     clusters(i) = clusters(i).update_center_of_mass_and_group_velocity();
+    clusters(i).id = i;
 end
 %% Inilitalise figure for real-time visualisation of trajectories
 fig1 = figure(1); hold on;
@@ -138,51 +144,26 @@ videoFile1 = fullfile('output', 'particles_dynamics.avi');
 video1 = VideoWriter(videoFile1);
 video1.FrameRate = 10;
 open(video1);
-%% Plot Stokes-Brinkman flow --> Use plot3 with elevation for particles (with flow)
-nplot = 100;
-hplot = (x_max - x_min) / nplot;
-[XX, YY] = meshgrid(x_min:hplot:x_max, y_min:hplot:y_max);
-
-UU = zeros(size(XX,1), size(XX,2), 2);
-for i = 1:size(XX,1)
-    for j = 1:size(XX,2)
-        UU(i,j,:) = U_interp([XX(i,j), YY(i,j)]);
-    end
-end
-UU = sqrt(sum(UU .* UU, 3));
-XX = XX ./ micron;
-YY = YY ./ micron;
-
-fig2 = figure(2); hold on;
-fig = surf(XX, YY, UU);
-set(fig, 'edgecolor', 'none'); view(2)
-cb = colorbar();
-ylabel(cb, '$u \ (\mu m / s)$', 'Interpreter', 'LaTeX', 'FontSize', 16)
-%z_elev = 0.1;
-xlabel('$\Omega_x \ (\mu m)$', 'Interpreter', 'LaTeX', 'FontSize', 16);
-ylabel('$\Omega_y \ (\mu m)$', 'Interpreter', 'LaTeX', 'FontSize', 16);
-title('Stokes-Brinkman flow', 'Interpreter', 'LaTeX', 'FontSize', 16);
-xlim([0 Omega_X / micron]);
-ylim([0 Omega_Y / micron]);
-set(gca, 'FontSize', 16);
-%% Preallocation
-disp('----> Preallocate variables')
+%% Allocation of variables
+disp('----> Allocate variables')
 coordP_over_time = zeros(num_steps, num_phages*2);
 coordB_over_time = zeros(num_steps, num_bacteria*2);
 max_clusters = length(bacteria); 
 coordC_over_time = zeros(num_steps, max_clusters*2); % (x1,y1,x2,y2,...)
 cluster_sizes_over_time = cell(num_steps, 1);
 phage_attachement_history = zeros(num_steps, num_bacteria);
+attached_phages = false(num_phages, 1);
 %% Time-stepping loop
 disp('----> Begin time iterations')
 tic
 for k = 1:num_steps
 
     disp('Time = '); 
-    disp(k*dt)
+    disp(k*dt);
 
-    disp('-------> Check if phage is already attached to a bacterium, then it remains attached')
-    phages = check_ifPhageAlreadyAttached(phages, bacteria);
+    %when I enter this function phages(i)is_attached is false, where does it update to true?
+    %disp('-------> Check if phage is already attached to a bacterium, then it remains attached')
+    %[phages, attached_phages] = check_ifPhageAlreadyAttached_2(phages, bacteria, attached_phages);
 
     disp('-------> Compute phages-bacteria interaction forces')
     [bacteriumInteractionForces, phageInteractionForces] = compute_bacteriaPhageInteractionForces(bacteria, phages, epsilon);
@@ -192,11 +173,11 @@ for k = 1:num_steps
 
     disp('-------> Compute attachments')
     last_time_step = (k == num_steps); 
-    [phages, bacteria, attached_phages] = compute_attachments(phages, bacteria, clusters, d_enc1, d_enc2, d_enc3, last_time_step, outputFolder); 
+    [phages, bacteria, attached_phages] = compute_attachments_2(phages, bacteria, clusters, ...
+        max_num_bacteria, attached_phages, d_enc1, d_enc2, d_enc3, last_time_step, outputFolder);
 
     %parfor i = 1:length(bacteria)
     for i = 1:length(bacteria)
-        num_attached = length(bacteria(i).phages_ids);
         phage_attachement_history(k,i) = length(bacteria(i).phages_ids);
     end
 
@@ -204,20 +185,25 @@ for k = 1:num_steps
     %parfor i = 1:length(phages)
     for i = 1:length(phages)
         if ~attached_phages(i) 
-            u_fl = U_interp([phages(i).position]);
-            [phages(i), phageNoiseTerm, phageFluidForce] = phages(i).computeFluidForce(u_fl);
+            %disp('I am not attached!!!!!!!!!!!!!!!');
+            u_fluid = U_interp([phages(i).position]);
+            [phages(i), phageNoiseTerm, phageFluidForce] = phages(i).computeFluidForce(u_fluid);
             phagesTotalForces = phageFluidForce + phageInteractionForces(i);
             phages(i) = phages(i).updateVelocity(phagesTotalForces, dt);
             phages(i) = phages(i).updatePosition(dt, domain, x_min, y_min, x_max, y_max);
+            %phage(i) = phage.BAOAB_update(u_fluid, dt, kB, T);
+        %else
+            %str = 'I am attached!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!';
+            %disp(str);
         end
     end
 
     disp('-------> Update bacteria positions')
     %parfor j = 1:length(bacteria) 
     for j = 1:length(bacteria) 
-        u_fl = U_interp([bacteria(j).position]);
+        u_fluid = U_interp([bacteria(j).position]);
         bacteria(j) = bacteria(j).computePropulsionForce();
-        bacteria(j) = bacteria(j).computeFluidForce(u_fl);
+        bacteria(j) = bacteria(j).computeFluidForce(u_fluid);
         bacteriaTotalForces = bacteria(j).computeTotalBacteriumForce() + bacteriumInteractionForces(j);
         bacteria(j) = bacteria(j).updateVelocity(bacteriaTotalForces, dt);
         bacteria(j) = bacteria(j).updatePosition(dt, domain, x_min, y_min, x_max, y_max);
@@ -226,9 +212,9 @@ for k = 1:num_steps
     disp('-------> Update clusters positions (center of mass)')
     %parfor n = 1:length(clusters)
     for n = 1:length(clusters)
-        u_fl = U_interp([clusters(n).position]);
+        u_fluid = U_interp([clusters(n).position]);
         clusters(n) = clusters(n).update_friction_coefficient(mu_water, wB);
-        clusters(n) = clusters(n).evolveLangevin(u_fl, dt, kB, T, domain, x_min, y_min, x_max, y_max);
+        clusters(n) = clusters(n).evolveLangevin(u_fluid, dt, kB, T, domain, x_min, y_min, x_max, y_max);
     end
     valid_clusters = arrayfun(@(c) c.size >= 2, clusters);
     cluster_sizes_filtered = arrayfun(@(c) c.size, clusters(valid_clusters))';
@@ -240,6 +226,7 @@ for k = 1:num_steps
     %parfor n = 1:length(clusters)
     for n = 1:length(clusters)
         clusters(n) = clusters(n).update_center_of_mass_and_group_velocity();
+        clusters(n).id = n;
     end
 
     fprintf('At time t = %6f, formed clusters:\n', k*dt);
@@ -298,7 +285,7 @@ for k = 1:num_steps
     writeVideo(video1, getframe(gcf));
 
     disp('-------> Save phages and bacteria positions')
-    xP_yP_matrix = [xP;yP];
+    xP_yP_matrix = [xP; yP];
     xP_yP_row_fixed_time = reshape(xP_yP_matrix, [2*length(phages),1])';
     coordP_over_time(k,:) = xP_yP_row_fixed_time;
     
@@ -320,70 +307,11 @@ fprintf('Total simulation time: %.2f seconds\n', elapsed_time);
 %% Post-processing
 disp('----> Save data and plot results')
 time_vec = (0:num_steps-1) * dt;
-save_trajectories(coordP_over_time, coordB_over_time, coordC_over_time, dt, num_steps, num_phages, num_bacteria, num_clusters_k, micron, outputFolder);
-phages_attached_over_time = [time_vec', phage_attachement_history];
-
-% Plot trajectories
+plot_StokesBrinkmanFlow(U_interp, x_min, x_max, y_min, y_max, micron, Omega_X, Omega_Y);
 plot_trajectories_2D(coordP_over_time, coordB_over_time, coordC_over_time, num_phages, num_bacteria, num_clusters_k, micron, Omega_X, Omega_Y);
-
-% Mean number of clusters over time
-figure;
-num_clusters_over_time = cellfun(@numel, cluster_sizes_over_time);
-plot(time_vec, num_clusters_over_time, 'LineWidth', 1.5);
-xlabel('Time (s)','Interpreter','LaTeX','FontSize',16);
-ylabel('Number of clusters','Interpreter','LaTeX','FontSize',16);
-title('Cluster count over time','Interpreter','LaTeX','FontSize',16);
-set(gca,'FontSize',16);
-saveas(gcf, 'plot_clusters_count' ,'epsc'); 
-
-% % Phage attachemnt evolution
-% figure; hold on;
-% for i = 1:size(phage_attachement_history, 2)
-%     plot(time_vec, phage_attachement_history(:,i), 'DisplayName', sprintf('Bacterium %d', bacteria(i).id));
-% end
-% xlabel('Time (s)','Interpreter','LaTeX','FontSize',16);
-% ylabel('Number of attached phages','Interpreter','LaTeX','FontSize',16);
-% title('Phages attached per bacterium over time','Interpreter','LaTeX','FontSize',16);
-% set(gca,'FontSize',16);
-% saveas(gcf, 'plot_phages_count' ,'epsc'); 
-% legend('show');
-% hold off;
-
-%Phages attachemt evolution
-% Find bacteria with any phage attachment over time
-non_zero_bacteria = any(phage_attachement_history > 0, 1); % logical array [1 x num_bacteria]
-filtered_data = phage_attachement_history(:, non_zero_bacteria);
-filtered_indices = find(non_zero_bacteria); % bacteria indices to use in legend
-
-figure;
-plot(time_vec, filtered_data, 'LineWidth',2);
-xlabel('Time (s)','Interpreter','LaTeX','FontSize',16);
-ylabel('Number of attached phages','Interpreter','LaTeX','FontSize',16);
-legend(arrayfun(@(i) sprintf('B%d', i), filtered_indices, 'UniformOutput', false));
-title('Phage attachments per bacterium over time','Interpreter','LaTeX','FontSize',16);
-set(gca,'FontSize',16);
-saveas(gcf, 'plot_phages_attachments' ,'epsc'); 
-legend('show');
-hold off;
-
-%Final phage attachment snapshot (bar plot)
-final_attachment_counts = phage_attachement_history(end, :);  % Last time step
-non_zero_final = final_attachment_counts > 0;
-final_counts_filtered = final_attachment_counts(non_zero_final);
-final_ids_filtered = find(non_zero_final);
-
-figure;
-bar(final_ids_filtered, final_counts_filtered, 'FaceColor', [0.2 0.6 0.8]);
-xlabel('Bacterium ID','Interpreter','LaTeX','FontSize',16);
-ylabel('Number of attached phages','Interpreter','LaTeX','FontSize',16);
-title('Phage attachments at final time step','Interpreter','LaTeX','FontSize',16);
-xticks(final_ids_filtered);
-xticklabels(arrayfun(@(i) sprintf('B%d', i), final_ids_filtered, 'UniformOutput', false));
-set(gca,'FontSize',16);
-saveas(gcf, 'plot_phages_attachments_final', 'epsc');
-
-%Final clusters configuration
-final_cluster_configuration(bacteria, threshold, domain, x_min, y_min, x_max, y_max);
+save_trajectories(coordP_over_time, coordB_over_time, coordC_over_time, dt, num_steps, num_phages, num_bacteria, num_clusters_k, micron, outputFolder);
+%phages_attached_over_time = [time_vec', phage_attachement_history];
+plot_simulation_results(time_vec, cluster_sizes_over_time, phage_attachement_history, DeltaK);
 
 close(video1);
 disp('DONE')

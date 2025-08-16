@@ -5,7 +5,7 @@ function phages = check_ifPhageAlreadyAttached(phages, bacteria)
         if isfield(phages(i), "is_attached") && phages(i).is_attached
             b_idx = phages(i).attached_bacterium;
             if b_idx > 0 && b_idx <= num_bacteria
-                phages(i).relative_position_wrt_bact = phages(i).position - bacteria(b_idx).position;
+                %phages(i).relative_position_wrt_bact = phages(i).position - bacteria(b_idx).position;
                 %rel_pos = phages(i).relative_position_wrt_bact;
                 %phages(i).position = bacteria(b_idx).position + rel_pos;
                 phages(i).position = bacteria(b_idx).position;

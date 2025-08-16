@@ -1,5 +1,5 @@
-clear all; close all;
-
+clc; clear all; close all;
+%% Add paths
 addpath('fluid/solverNS/')
 addpath('interpolation')
 addpath_tools()

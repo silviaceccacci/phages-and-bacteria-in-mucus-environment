@@ -24,6 +24,8 @@ function [bacteriumInteractionForces, phageInteractionForces] = compute_bacteria
 
                 % Calculate the force vector
                 F_interaction = F_magnitude * (rij / r); % Force is in the direction of rij
+
+                F_interaction = [0, 0];
             else
                 % Beyond the cutoff distance, potential and force are zero
                 %V = 0;

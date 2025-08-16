@@ -24,7 +24,7 @@ classdef Bacterium
         phages_ids
         radius
         theta
-        orientation
+        %orientation
     end
     
     methods
@@ -49,7 +49,7 @@ classdef Bacterium
             b.y_max = y_max;
             b.radius = 1e-6;
             b.theta = pi*rand;
-            b.orientation = [cos(b.theta), sin(b.theta)];
+            %b.orientation = [cos(b.theta), sin(b.theta)];
         end
         
         function b = computePropulsionForce(b)
@@ -61,14 +61,15 @@ classdef Bacterium
             else
                 % Run phase: compute random angles for flagellar force
                 b.phi = 2 * pi * rand; 
-                propulsion_dir = [cos(b.phi),sin(b.phi)];
-                b.flagellar_force = b.alpha * b.friction_coefficient * b.run_velocity * propulsion_dir;
+                %propulsion_dir = [cos(b.phi),sin(b.phi)];
+                b.flagellar_force = b.alpha * b.friction_coefficient * b.run_velocity;
+                %b.flagellar_force = b.alpha * b.friction_coefficient * b.run_velocity * propulsion_dir;
                 %b.flagellar_force = b.friction_coefficient * b.run_velocity / 0.825 * [cos(b.phi), sin(b.phi)];
                 %b.flagellar_force = [0.0, 0.0];
 
-                %Align body orientation with propulsion direction
-                b.theta = b.phi;
-                b.orientation = propulsion_dir;
+%                 %Align body orientation with propulsion direction
+%                 b.theta = b.phi;
+%                 b.orientation = propulsion_dir;
             end
         end
 
@@ -112,12 +113,12 @@ classdef Bacterium
             end
         end
 
-        function [end1, end2] = getRodEndpoints(b)
-            half_length = 0.5 * b.length;
-            delta = half_length * b.orientation;
-            end1 = b.position - delta;
-            end2 = b.position + delta;
-        end
+%         function [end1, end2] = getRodEndpoints(b)
+%             half_length = 0.5 * b.length;
+%             delta = half_length * b.orientation;
+%             end1 = b.position - delta;
+%             end2 = b.position + delta;
+%         end
 
     end
 end

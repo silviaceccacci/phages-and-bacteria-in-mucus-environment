@@ -1,6 +1,7 @@
  classdef Cluster
 
     properties
+        id
         position
         velocity
         bacteria
@@ -10,6 +11,7 @@
         y_min
         x_max
         y_max
+        bacteria_ids
     end
 
     properties (Dependent)
@@ -17,7 +19,7 @@
     end
 
     methods
-        function c = Cluster(position, velocity, bacteria, domain, x_min, y_min, x_max, y_max) 
+        function c = Cluster(position, velocity, bacteria, domain, x_min, y_min, x_max, y_max)
             if nargin > 0
                 c.position = rand(1, 2);
                 c.velocity = rand(1, 2);
@@ -67,20 +69,20 @@
             for i = 1:num_bacteria
                 c.bacteria(i).relative_position_wrt_com = c.bacteria(i).position - c.position;
             end
-        end 
+        end
 
         function c = evolveLangevin(c, fluid_velocity, dt, kB, T, domain, x_min, y_min, x_max, y_max)
             noise = sqrt(2 * c.friction_coefficient * kB * T / dt) * randn(1, 2);
             drag_force = -c.friction_coefficient * (c.velocity - fluid_velocity);
             total_force = drag_force + noise;
 
-             num_bacteria = length(c.bacteria);
-             masses = zeros(num_bacteria, 1);
-             for i = 1:num_bacteria
+            num_bacteria = length(c.bacteria);
+            masses = zeros(num_bacteria, 1);
+            for i = 1:num_bacteria
                 masses(i) = c.bacteria(i).mass;
-             end
-             total_mass = sum(masses);
-    
+            end
+            total_mass = sum(masses);
+
             c.velocity = c.velocity + (total_force ./ total_mass) * dt;
             c.position = c.position + c.velocity * dt;
 
@@ -103,16 +105,50 @@
             end
 
             if c.position(1) < x_min
-                c.position(1) = c.position(1) + domain(1); 
+                c.position(1) = c.position(1) + domain(1);
             elseif c.position(1) > x_max
-                c.position(1) = c.position(1) - domain(1); 
+                c.position(1) = c.position(1) - domain(1);
             end
             if c.position(2) < y_min
-                c.position(2) = c.position(2) + domain(2); 
+                c.position(2) = c.position(2) + domain(2);
             elseif c.position(2) > y_max
-                c.position(2) = c.position(2) - domain(2); 
+                c.position(2) = c.position(2) - domain(2);
             end
         end
+
+%             for i = 1:c.size
+%                 rel_pos = c.bacteria(i).relative_position_wrt_com;
+%                 %rel_pos = c.bacteria(i).position - c.position; % relative to old COM
+%                 c.bacteria(i).position = c.position + rel_pos; % shifted with new COM
+%                 c.bacteria(i).velocity = c.velocity; % move with cluster
+%             end
+% 
+%             % Check if COM or any bacterium is out of bounds
+%             shift_x = 0;
+%             shift_y = 0;
+% 
+%             % Check X direction
+%             if c.position(1) < x_min || any(arrayfun(@(b) b.position(1) < x_min, c.bacteria))
+%                 shift_x = domain(1); % move right
+%             elseif c.position(1) > x_max || any(arrayfun(@(b) b.position(1) > x_max, c.bacteria))
+%                 shift_x = -domain(1); % move left
+%             end
+% 
+%             % Check Y direction
+%             if c.position(2) < y_min || any(arrayfun(@(b) b.position(2) < y_min, c.bacteria))
+%                 shift_y = domain(2); % move up
+%             elseif c.position(2) > y_max || any(arrayfun(@(b) b.position(2) > y_max, c.bacteria))
+%                 shift_y = -domain(2); % move down
+%             end
+% 
+%             % Apply shift to entire cluster if needed
+%             if shift_x ~= 0 || shift_y ~= 0
+%                 c.position = c.position + [shift_x, shift_y];
+%                 for i = 1:c.size
+%                     c.bacteria(i).position = c.bacteria(i).position + [shift_x, shift_y];
+%                 end
+%             end
+%        end
     end
 
     methods (Static)
@@ -156,6 +192,8 @@
 
                 clusters = [clusters, Cluster(pos, vel, bacteriaInCluster,domain, x_min, y_min, x_max, y_max)];
                 cluster_id_counter = cluster_id_counter + 1;
+%                 str = sprintf('cluster_id_counter = %d', cluster_id_counter);
+%                 disp(str);
                 else
                     visited(i) = false;
                 end
