@@ -41,7 +41,7 @@ DeltaK = maxDarcyNum - minDarcyNum;
 %% Numerical parameters
 disp('----> Read numerical and physical parameters')
 dt = 100e-6; 
-num_steps = 500; %1000;
+num_steps = 5000;
 %% Physical parameters
 mu_water = 10^(-3);     % Dynamic viscosity (Pa s)
 rho_water = 10^3;       % Mass density of phage (kg/m^3)
@@ -79,6 +79,7 @@ end
 %% Clusters
 disp('----> Initialise clusters at initial configuration')
 threshold = 0.5 * micron;
+%clusters = [];
 [clusters, bacteria] = Cluster.form_clusters(bacteria, threshold, domain, x_min, y_min, x_max, y_max);
 
 % Print formed clusters
@@ -147,12 +148,13 @@ open(video1);
 %% Allocation of variables
 disp('----> Allocate variables')
 coordP_over_time = zeros(num_steps, num_phages*2);
-coordB_over_time = zeros(num_steps, num_bacteria*2);
+coordB_over_time = zeros(num_steps, max_num_bacteria*2);
 max_clusters = length(bacteria); 
 coordC_over_time = zeros(num_steps, max_clusters*2); % (x1,y1,x2,y2,...)
 cluster_sizes_over_time = cell(num_steps, 1);
 phage_attachement_history = zeros(num_steps, num_bacteria);
 attached_phages = false(num_phages, 1);
+n_phages_vs_time = zeros(num_steps);
 %% Time-stepping loop
 disp('----> Begin time iterations')
 tic
@@ -173,11 +175,17 @@ for k = 1:num_steps
 
     disp('-------> Compute attachments')
     last_time_step = (k == num_steps); 
-    [phages, bacteria, attached_phages] = compute_attachments_2(phages, bacteria, clusters, ...
+    [phages, bacteria, attached_phages, n_phages_attached] = compute_attachments_2(phages, bacteria, clusters, ...
         max_num_bacteria, attached_phages, d_enc1, d_enc2, d_enc3, last_time_step, outputFolder);
+    
+    if k == 1
+        n_phages_vs_time(k) = n_phages_attached; %attached to bacteria (single or in cluster) only
+    else
+        n_phages_vs_time(k) = n_phages_attached + n_phages_vs_time(k-1);
+    end
 
     %parfor i = 1:length(bacteria)
-    for i = 1:length(bacteria)
+    for i = 1:length(bacteria) %here bacteria are all of them (free and not)
         phage_attachement_history(k,i) = length(bacteria(i).phages_ids);
     end
 
@@ -222,6 +230,7 @@ for k = 1:num_steps
 
     disp('-------> Compute new clusters and bacteria not in cluster')
     bacteria = [bacteria, clusters.bacteria]; % put all bacteria (single and in cluster) in bacteria variable
+
     [clusters, bacteria] = Cluster.form_clusters(bacteria, threshold, domain, x_min, y_min, x_max, y_max);
     %parfor n = 1:length(clusters)
     for n = 1:length(clusters)
@@ -284,23 +293,23 @@ for k = 1:num_steps
     drawnow; pause(0.2);
     writeVideo(video1, getframe(gcf));
 
-    disp('-------> Save phages and bacteria positions')
-    xP_yP_matrix = [xP; yP];
-    xP_yP_row_fixed_time = reshape(xP_yP_matrix, [2*length(phages),1])';
-    coordP_over_time(k,:) = xP_yP_row_fixed_time;
-    
-    xB_yB_matrix = [xB, xC; yB, yC];     %xB_yB_matrix = [xB;yB];
-    xB_yB_row_fixed_time = reshape(xB_yB_matrix, [2*(length(positionsB)+length(all_bacteria)),1])';
-    coordB_over_time(k,:) = xB_yB_row_fixed_time;
-    
-    clusters_filtered = clusters([clusters.size] >= 2);
-    num_clusters_k = length(clusters_filtered);
-    xC_yC_matrix = NaN(2, num_clusters_k);  % [2 x num_clusters_k]
-    for c = 1:num_clusters_k
-        xC_yC_matrix(:, c) = clusters_filtered(c).position(:);
-    end
-    xC_yC_row_fixed_time = reshape(xC_yC_matrix, [2*num_clusters_k, 1])';
-    coordC_over_time(k, 1:length(xC_yC_row_fixed_time)) = xC_yC_row_fixed_time;
+%     disp('-------> Save phages and bacteria positions')
+%     xP_yP_matrix = [xP; yP];
+%     xP_yP_row_fixed_time = reshape(xP_yP_matrix, [2*length(phages),1])';
+%     coordP_over_time(k,:) = xP_yP_row_fixed_time;
+%     
+%     xB_yB_matrix = [xB, xC; yB, yC];     %xB_yB_matrix = [xB;yB];
+%     xB_yB_row_fixed_time = reshape(xB_yB_matrix, [2*(length(positionsB)+length(all_bacteria)),1])';
+%     coordB_over_time(k,:) = xB_yB_row_fixed_time;
+%     
+%     clusters_filtered = clusters([clusters.size] >= 2);
+%     num_clusters_k = length(clusters_filtered);
+%     xC_yC_matrix = NaN(2, num_clusters_k);  % [2 x num_clusters_k]
+%     for c = 1:num_clusters_k
+%         xC_yC_matrix(:, c) = clusters_filtered(c).position(:);
+%     end
+%     xC_yC_row_fixed_time = reshape(xC_yC_matrix, [2*num_clusters_k, 1])';
+%     coordC_over_time(k, 1:length(xC_yC_row_fixed_time)) = xC_yC_row_fixed_time;
 end
 elapsed_time = toc; % end timer and get elapsed time
 fprintf('Total simulation time: %.2f seconds\n', elapsed_time);
@@ -308,10 +317,56 @@ fprintf('Total simulation time: %.2f seconds\n', elapsed_time);
 disp('----> Save data and plot results')
 time_vec = (0:num_steps-1) * dt;
 plot_StokesBrinkmanFlow(U_interp, x_min, x_max, y_min, y_max, micron, Omega_X, Omega_Y);
-plot_trajectories_2D(coordP_over_time, coordB_over_time, coordC_over_time, num_phages, num_bacteria, num_clusters_k, micron, Omega_X, Omega_Y);
-save_trajectories(coordP_over_time, coordB_over_time, coordC_over_time, dt, num_steps, num_phages, num_bacteria, num_clusters_k, micron, outputFolder);
+%plot_trajectories_2D(coordP_over_time, coordB_over_time, coordC_over_time, num_phages, num_bacteria, num_clusters_k, micron, Omega_X, Omega_Y);
+%save_trajectories(coordP_over_time, coordB_over_time, coordC_over_time, dt, num_steps, num_phages, num_bacteria, num_clusters_k, micron, outputFolder);
 %phages_attached_over_time = [time_vec', phage_attachement_history];
 plot_simulation_results(time_vec, cluster_sizes_over_time, phage_attachement_history, DeltaK);
 
+n_phages_vs_time_vec = n_phages_vs_time(:,1);
+save('time_vec.txt','time_vec','-ascii');
+type('time_vec.txt');
+save('n_phages_vs_time_vec.txt','n_phages_vs_time_vec','-ascii');
+type('n_phages_vs_time_vec.txt');
+
+
+figure;
+plot(time_vec, n_phages_vs_time, 'LineWidth', 2)
+
+%fit saturation model
+% Define fit type (linear model with 2 parameters)
+ft = fittype('N0 * time_vec / (time_vec + ts)','independent','time_vec','coefficients',{'N0','ts'});
+
+opts = fitoptions('Method','NonlinearLeastSquares',...
+                  'StartPoint',[160 0.06]);   % initial guesses [a0, b0]
+
+% Perform the fit
+f = fit(time_vec',n_phages_vs_time(:,1),ft, opts);
+
+% Show results
+disp(f);
+
+% Plot
+plot(f,time_vec,n_phages_vs_time(:,1));
+legend('Data','Fit');
+
+% n_phages_vs_time_vec = n_phages_vs_time.n_phages_vs_time(:,1);
+% %time_vec = time_vec.time_vec;
+% save('time_vec.txt','time_vec','-ascii');
+% type('time_vec.txt');
+% save('n_phages_vs_time_vec.txt','n_phages_vs_time_vec','-ascii');
+% type('n_phages_vs_time_vec.txt');
+
+% folder = '/Users/silviaceccacci/Library/CloudStorage/Dropbox/BSC/Projects/AI4S/phages-bacteria_interaction_mucus/conference/1/time_vec.dat';   % full path to folder
+% %filename = fullfile(folder,'time_vec.dat');  % builds correct path
+% save(folder,'time_vec','-ascii');
+% folder = '/Users/silviaceccacci/Library/CloudStorage/Dropbox/BSC/Projects/AI4S/phages-bacteria_interaction_mucus/conference/1/n_phages_vs_time_vec.dat';   % full path to folder
+% save(folder,'n_phages_vs_time,filename','-ascii');
+
+
+%filename = fullfile(folder,'n_phages_vs_time.dat');  % builds correct path
+%writematrix(n_phages_vs_time,filename);
+
 close(video1);
 disp('DONE')
+
+
