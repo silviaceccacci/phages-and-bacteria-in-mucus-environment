@@ -29,19 +29,28 @@ x_max = max(mesh.X(:,1));
 y_min = min(mesh.X(:,2));
 y_max = max(mesh.X(:,2));
 clear mesh;
-load([case_name '_pressGrad_uInterp'])
+%load([case_name '_pressGrad_uInterp'])
+%load([case_name '_pressGrad_uInterp_min1e-3_max1e16'])
+%load([case_name '_pressGrad_uInterp_min1e-1_max1e16'])
+
+%load([case_name '_pressGrad_uInterp_min1e-5_max1e14'])
+%load([case_name '_pressGrad_uInterp_min1e-4_max1e14'])
+%load([case_name '_pressGrad_uInterp_min1e-3_max1e14'])
+load([case_name '_pressGrad_uInterp_min1e-2_max1e14'])
+%load([case_name '_pressGrad_uInterp_min1e-1_max1e14'])
+
 
 Omega_X = x_max - x_min; 
 Omega_Y = y_max - y_min; 
 domain = [Omega_X, Omega_Y];
 
-minDarcyNum = 1e-3; 
+minDarcyNum = 1e-51; 
 maxDarcyNum = 1e14; 
 DeltaK = maxDarcyNum - minDarcyNum;
 %% Numerical parameters
 disp('----> Read numerical and physical parameters')
 dt = 100e-6; 
-num_steps = 5000;
+num_steps = 2500; %5000;
 %% Physical parameters
 mu_water = 10^(-3);     % Dynamic viscosity (Pa s)
 rho_water = 10^3;       % Mass density of phage (kg/m^3)
@@ -320,7 +329,7 @@ plot_StokesBrinkmanFlow(U_interp, x_min, x_max, y_min, y_max, micron, Omega_X, O
 %plot_trajectories_2D(coordP_over_time, coordB_over_time, coordC_over_time, num_phages, num_bacteria, num_clusters_k, micron, Omega_X, Omega_Y);
 %save_trajectories(coordP_over_time, coordB_over_time, coordC_over_time, dt, num_steps, num_phages, num_bacteria, num_clusters_k, micron, outputFolder);
 %phages_attached_over_time = [time_vec', phage_attachement_history];
-plot_simulation_results(time_vec, cluster_sizes_over_time, phage_attachement_history, DeltaK);
+%plot_simulation_results(time_vec, cluster_sizes_over_time, phage_attachement_history, DeltaK);
 
 n_phages_vs_time_vec = n_phages_vs_time(:,1);
 save('time_vec.txt','time_vec','-ascii');
@@ -331,40 +340,14 @@ type('n_phages_vs_time_vec.txt');
 
 figure;
 plot(time_vec, n_phages_vs_time, 'LineWidth', 2)
-
-%fit saturation model
+%Fit saturation model
 % Define fit type (linear model with 2 parameters)
 ft = fittype('N0 * time_vec / (time_vec + ts)','independent','time_vec','coefficients',{'N0','ts'});
-
-opts = fitoptions('Method','NonlinearLeastSquares',...
-                  'StartPoint',[160 0.06]);   % initial guesses [a0, b0]
-
-% Perform the fit
+opts = fitoptions('Method','NonlinearLeastSquares','StartPoint',[160 0.06]);   % initial guesses [a0, b0]
 f = fit(time_vec',n_phages_vs_time(:,1),ft, opts);
-
-% Show results
 disp(f);
-
-% Plot
 plot(f,time_vec,n_phages_vs_time(:,1));
 legend('Data','Fit');
-
-% n_phages_vs_time_vec = n_phages_vs_time.n_phages_vs_time(:,1);
-% %time_vec = time_vec.time_vec;
-% save('time_vec.txt','time_vec','-ascii');
-% type('time_vec.txt');
-% save('n_phages_vs_time_vec.txt','n_phages_vs_time_vec','-ascii');
-% type('n_phages_vs_time_vec.txt');
-
-% folder = '/Users/silviaceccacci/Library/CloudStorage/Dropbox/BSC/Projects/AI4S/phages-bacteria_interaction_mucus/conference/1/time_vec.dat';   % full path to folder
-% %filename = fullfile(folder,'time_vec.dat');  % builds correct path
-% save(folder,'time_vec','-ascii');
-% folder = '/Users/silviaceccacci/Library/CloudStorage/Dropbox/BSC/Projects/AI4S/phages-bacteria_interaction_mucus/conference/1/n_phages_vs_time_vec.dat';   % full path to folder
-% save(folder,'n_phages_vs_time,filename','-ascii');
-
-
-%filename = fullfile(folder,'n_phages_vs_time.dat');  % builds correct path
-%writematrix(n_phages_vs_time,filename);
 
 close(video1);
 disp('DONE')

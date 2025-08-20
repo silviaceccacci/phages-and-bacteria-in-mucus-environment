@@ -24,7 +24,7 @@ parameters.BC = BC;
 model.viscosity         = 1e-2      ; % DISAPEARS IF ADIMENSIONALIZED in V, not in P
 parameters.umag_in      = 83.3*1e-6 ; % 
 parameters.pressureGrad = -20 ;       % -20 gradP gives aprox 83.3*1e-6 u_mag
-minDarcyNum = 1e-3;  %1e-3; % perme->0      : more resistance % adimensional, Darcy number
+minDarcyNum = 1e-2;  %1e-3; % perme->0      : more resistance % adimensional, Darcy number
 maxDarcyNum = 1e14; % perme->infty  : no resistance   % adimensional, Darcy number
 %parameters.pressureGrad = 0.5*1/minDarcyNum ;       % -20 gradP gives aprox 83.3*1e-6 u_mag
 % -----Solver:
