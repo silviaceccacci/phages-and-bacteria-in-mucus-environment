@@ -157,25 +157,25 @@ for i = 1:length(phages) % Loop over each phage and each bacterium to check for 
     end
 end
 
-if last_time_step % Only print and save attachment info at the last time step
-    filename = fullfile(outputFolder, 'attachmentsPhagesBacteria.dat');
-    fileID = fopen(filename, 'w');
-
-    %         str = sprintf('ciao ');
-    %         disp(str);
-
-    for j = 1:length(bacteria)
-        if ~isempty(attachment_info{j})
-            fprintf(fileID, '%d', bacteria(j).id);
-            %                 str = sprintf('bacteria ID = %d', bacteria(j).id);
-            %                 disp(str);
-            fprintf(fileID, ', %d', attachment_info{j}); % Write attached phages
-            fprintf(fileID, '\n');
-        end
-    end
-    fclose(fileID);
-    %fprintf('Attachment data saved to %s\n', filename);
-end
+% if last_time_step % Only print and save attachment info at the last time step
+%     filename = fullfile(outputFolder, 'attachmentsPhagesBacteria.dat');
+%     fileID = fopen(filename, 'w');
+% 
+%     %         str = sprintf('ciao ');
+%     %         disp(str);
+% 
+%     for j = 1:length(bacteria)
+%         if ~isempty(attachment_info{j})
+%             fprintf(fileID, '%d', bacteria(j).id);
+%             %                 str = sprintf('bacteria ID = %d', bacteria(j).id);
+%             %                 disp(str);
+%             fprintf(fileID, ', %d', attachment_info{j}); % Write attached phages
+%             fprintf(fileID, '\n');
+%         end
+%     end
+%     fclose(fileID);
+%     %fprintf('Attachment data saved to %s\n', filename);
+% end
 
 
 end
