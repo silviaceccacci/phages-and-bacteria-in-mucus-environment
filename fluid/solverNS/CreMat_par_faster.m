@@ -68,7 +68,6 @@ end
 
 map_to_master_v = model.periodic_data.map_to_master_v;
 map_to_master_p = model.periodic_data.map_to_master_p;
-
 for ielem = 1:numel 
     elem_nodes = IEN(ielem,:);
     elem_nodes = map_to_master_v(elem_nodes);

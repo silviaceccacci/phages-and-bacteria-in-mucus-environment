@@ -1,5 +1,6 @@
 function [domain,mesh,model,parameters]=adimensionalize(domain,mesh,model,parameters)
 
+disp('---------------------  Adimensionalize  ----------------------------')
     % DOMAIN
 %     x0 = [domain.x_LL domain.y_LD];
 %     x1 = [domain.x_LR domain.y_LU];
@@ -20,7 +21,7 @@ function [domain,mesh,model,parameters]=adimensionalize(domain,mesh,model,parame
     mesh.domain = domain;
     fprintf('Domain adim: [%4.2e %4.2e]x[%4.2e %4.2e]\n',domain.x_LL,domain.x_LR,domain.y_LD,domain.y_LU)
     
-    disp('ENSURE THAT PRESSURE GRAD/JUMP IS CORRECT!!!!!!')
+    %disp('ENSURE THAT PRESSURE GRAD/JUMP IS CORRECT!!!!!!')
     % adim pressure grad:
     %parameters.pressureGrad = parameters.pressureGrad/domain.Lchar;
     Pref = domain.Lchar/( model.viscosity*parameters.umag_in );

@@ -190,13 +190,14 @@ while(isConvergedNonLinearTerm==false)
 
     b = b(unknowns)-A(unknowns,prescribedDOF)*prescribedValues;
     A = A(unknowns,unknowns);
+    toc;
 
-    toc; tic; 
-    condA = condest(A);
-    fprintf('  Condition number: %e ...',condA); toc;
-    if(condA>1e15) 
-        error('Too large condition number.. maybe BCs are not correct? lack of p fixed? :-)')
-    end
+%     tic; 
+%     condA = condest(A);
+%     fprintf('  Condition number: %e ...',condA); toc;
+%     if(condA>1e15) 
+%         error('Too large condition number.. maybe BCs are not correct? lack of p fixed? :-)')
+%     end
 
     %__System solution
     fprintf('  Solve linear system... '); tic;
