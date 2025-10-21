@@ -11,16 +11,16 @@ disp(' - iterate on flow to set proper pressure for mean flow')
 disp('--------------------------------------------------------------------')
 %% PARAMETERS: (move to function?)
 [parameters,model]=set_default_parameters_model();
-parameters.case_name  = 'mucus1';
-parameters.umag_in      = 83.3*1e-6 ; % from some reference
-parameters.pressureGrad = -20 ; % -20 gradP gives aprox 83.3*1e-6 u_mag for some perme
-parameters.minDarcyNum = 1e-2;  %1e-3; % perme->0      : more resistance % adimensional, Darcy number
-parameters.maxDarcyNum = 1e14;  %perme->infty  : no resistance   % adimensional, Darcy number
+parameters.case_name    = 'mucus1';
+parameters.umag_in      = 83.3*1e-6; % from some reference
+parameters.pressureGrad = -20  ; % -20 gradP gives aprox 83.3*1e-6 u_mag for some perme
+parameters.minDarcyNum  = 1e-2 ; % 1e-3; % perme->0      : more resistance % adimensional, Darcy number
+parameters.maxDarcyNum  = 1e14 ; % perme->infty  : no resistance   % adimensional, Darcy number
 %% Mesh
 disp('---------------------  Mesh and domain  ----------------------------')
-do_mesh_from_image = true;
-[mesh,model,domain]=generate_mesh_domain(do_mesh_from_image,model,parameters);
-%% Flow solverrameters)
+do_mesh_from_image  = true;
+[mesh,model,domain] = generate_mesh_domain(do_mesh_from_image,model,parameters);
+%% Flow solver
 [solution,domain]=flow_solver(domain,mesh,model,parameters);
 %% Build interp
 disp('---------------------  Interpolant ---------------------------------')

@@ -135,8 +135,8 @@ fprintf('  CreMat... '); tic;
 [K,G,f] = CreMat_par_faster(X,T,Xp,Tp,1,model,do_parallAssembly);
 toc
 
-isConverged = false;
-while(isConverged==false)
+isConvergedNonLinearTerm = false;
+while(isConvergedNonLinearTerm==false)
     %% Picard -> update convective term
     if(do_convective)
         error('ensure convective terms is well implemented (periodic,etc)')
@@ -232,9 +232,9 @@ while(isConverged==false)
         
         isLowError = maxE<TOL;
         isIterViolated = iter>maxIterNonLinear;
-        isConverged= isLowError | isIterViolated;
+        isConvergedNonLinearTerm = isLowError | isIterViolated;
     else
-        isConverged=true;
+        isConvergedNonLinearTerm = true;
     end
 end
 clear K; clear G;
