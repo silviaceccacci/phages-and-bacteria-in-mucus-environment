@@ -1,0 +1,5 @@
+# Ignore all files in output/
+output/
+
+# Ignore all files in image2mesh/temps/
+image2mesh/temps/
