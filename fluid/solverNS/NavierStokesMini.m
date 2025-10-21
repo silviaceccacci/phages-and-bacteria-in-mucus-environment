@@ -209,7 +209,7 @@ while(isConverged==false)
     auxsol(unknowns)      = sol                          ;
     auxsol(prescribedDOF) = prescribedValues             ;
     if(isPeriodic)
-        disp('   Assigning periodic dof values...')
+        disp('  Assigning periodic dof values...')
         auxsol(slaves_periodic) = auxsol(master_periodic);
     end
     auxsol(dof_p_to_fix)=value_p_to_fix;
