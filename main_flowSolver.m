@@ -22,7 +22,8 @@ do_mesh_from_image  = true;
 [mesh,model,domain] = generate_mesh_domain(do_mesh_from_image,model,parameters);
 %% Flow solver
 umag_mucus    = parameters.umag_in;
-if(parameters.convective)
+if(parameters.convective) 
+    % nonlinear equation requires Newton to rescale gradPress for umean
     maxIterVel    = 10;
     isConvMeanVel = false;
     fact_pressGrad= 1;
@@ -47,18 +48,20 @@ if(parameters.convective)
         disp('----------------------------------------------------------------------------------- ')
     end
 else    
-    % Solve for initial gradPress
-    [solution,domain]=flow_solver(domain,mesh,model,parameters);
+    % Linear equation: equation linear on gradPress, rescale u & p directly
     % For the stokes problem, due to the liniarity of the problem, the
     % desired mean velocity is attained by rescaling the solution
+    [solution,domain]=flow_solver(domain,mesh,model,parameters);
     umean            = computeMeanVel(mesh,domain,solution);
     fact_rescale     = umag_mucus/umean;
     solution.u = solution.u*fact_rescale;
     solution.p = solution.p*fact_rescale;
+    umean            = computeMeanVel(mesh,domain,solution);
+    fprintf('Mean velocity: %8.2e\n',umean)
 end
 %% Build interp
 disp('---------------------  Interpolant ---------------------------------')
 disp('Setting interpolant...')
-[U_interp]=set_interpolant(mesh,solution.u,parameters.adimensionalize,domain);
+[U_interp]=set_interpolant(mesh,solution.u,false,domain);
 
 save(['./output/' parameters.case_name '_uInterp'],"U_interp");
