@@ -11,7 +11,6 @@ classdef Bacterium
         position
         velocity
         phi
-        alpha
         flagellar_force
         fluid_force
         domain
@@ -24,7 +23,6 @@ classdef Bacterium
         phages_ids
         radius
         theta
-        %orientation
     end
     
     methods
@@ -33,13 +31,12 @@ classdef Bacterium
             b.width = wB;
             b.mass = rhoB * pi * lB * wB^2;
             b.friction_coefficient = 6 * pi * mu_water * wB;
-            b.noise_amplitude = sqrt(2 * b.friction_coefficient * kB * T / dt); %divide by dt?
+            b.noise_amplitude = sqrt(2 * b.friction_coefficient * kB * T); %divide by dt?
             b.run_velocity = run_velocity;
             b.tumble_prob = tumble_frequency * dt; % Probability of a tumble in each time step
             b.position = rand(1, 2) .* domain; % Random initial position
             b.velocity = zeros(1, 2); % Initial velocity zero
             b.phi = 0;
-            b.alpha = 1; %1e-3; % Adjust this value to scale down the flagellar force
             b.flagellar_force = zeros(1, 2);
             b.fluid_force = zeros(1, 2);
             b.domain = domain;
@@ -49,7 +46,6 @@ classdef Bacterium
             b.y_max = y_max;
             b.radius = 1e-6;
             b.theta = pi*rand;
-            %b.orientation = [cos(b.theta), sin(b.theta)];
         end
         
         function b = computePropulsionForce(b)
@@ -61,15 +57,8 @@ classdef Bacterium
             else
                 % Run phase: compute random angles for flagellar force
                 b.phi = 2 * pi * rand; 
-                %propulsion_dir = [cos(b.phi),sin(b.phi)];
-                b.flagellar_force = b.alpha * b.friction_coefficient * b.run_velocity;
-                %b.flagellar_force = b.alpha * b.friction_coefficient * b.run_velocity * propulsion_dir;
-                %b.flagellar_force = b.friction_coefficient * b.run_velocity / 0.825 * [cos(b.phi), sin(b.phi)];
-                %b.flagellar_force = [0.0, 0.0];
-
-%                 %Align body orientation with propulsion direction
-%                 b.theta = b.phi;
-%                 b.orientation = propulsion_dir;
+                propulsion_dir = [cos(b.phi),sin(b.phi)];
+                b.flagellar_force = b.friction_coefficient * b.run_velocity * propulsion_dir;
             end
         end
 
@@ -112,13 +101,5 @@ classdef Bacterium
                 b.position(2) = b.position(2) - domain(2); 
             end
         end
-
-%         function [end1, end2] = getRodEndpoints(b)
-%             half_length = 0.5 * b.length;
-%             delta = half_length * b.orientation;
-%             end1 = b.position - delta;
-%             end2 = b.position + delta;
-%         end
-
     end
 end

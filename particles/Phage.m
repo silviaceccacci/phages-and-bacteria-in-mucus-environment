@@ -20,14 +20,12 @@ classdef Phage
     end
     
     methods
-        function p = Phage(rP, rhoP, mu_water, kB, T, dt, domain, x_min, y_min, x_max, y_max)
+        function p = Phage(rP, rhoP, mu_water, kB, T, domain, x_min, y_min, x_max, y_max)
             p.radius = rP;
             p.mass = rhoP * 4/3 * pi * rP^3;
             p.friction_coefficient = 6 * pi * mu_water * rP;
-            p.noise_amplitude = sqrt(2 * p.friction_coefficient * kB * T / dt); %divide by dt?
+            p.noise_amplitude = sqrt(2 * p.friction_coefficient * kB * T); 
             p.position = rand(1, 2) .* domain; % Random initial position
-            %p.position = zeros(1, 2); % Random initial position
-            %p.velocity = [83.3, 0] * 10^(-6); 
             p.velocity = zeros(1, 2); % Initial velocity zero
             p.domain = domain;
             p.x_min = x_min;
@@ -41,11 +39,7 @@ classdef Phage
         
         function [p, noise_term, force] = computeFluidForce(p, fluid_velocity)
             % Compute the fluid drag force on the phage
-            random_number_1 = randn(1, 1);
-            random_number_2 = randn(1, 1);
-            random_number_vec = [random_number_1, random_number_2];
-            noise_term = p.noise_amplitude * random_number_vec;
-            %noise_term = p.noise_amplitude * randn(1, 2);
+            noise_term = p.noise_amplitude * randn(1, 2);
             force = -p.friction_coefficient * (p.velocity - fluid_velocity) + noise_term;
         end
         
