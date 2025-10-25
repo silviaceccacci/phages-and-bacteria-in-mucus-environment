@@ -22,7 +22,6 @@ classdef Bacterium
         relative_position_wrt_com
         phages_ids
         radius
-        theta
     end
     
     methods
@@ -45,7 +44,6 @@ classdef Bacterium
             b.x_max = x_max;
             b.y_max = y_max;
             b.radius = 1e-6;
-            b.theta = pi*rand;
         end
         
         function b = computePropulsionForce(b)

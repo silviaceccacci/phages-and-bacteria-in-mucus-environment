@@ -1,7 +1,6 @@
 function save_trajectories(xP_over_time, xB_over_time, xC_over_time, dt, N_steps, num_phages, num_bacteria, num_clusters, micron, outputFolder)
 
     %% Save Phage Positions to a .dat File
-    %phage_filename = 'phages_trajectories.dat';
     phage_filename = fullfile(outputFolder, 'trajectoriesPhages.dat'); 
     phage_file = fopen(phage_filename, 'w'); 
 
@@ -21,7 +20,6 @@ function save_trajectories(xP_over_time, xB_over_time, xC_over_time, dt, N_steps
             x_val = xP_over_time(k, (i-1)*2 + 1) / micron;
             y_val = xP_over_time(k, i*2) / micron;
 
-            % Debugging: print values to console to verify correctness
             %fprintf('Time: %.6f, Phage %d X: %.6f, Y: %.6f\n', (k-1)*dt, i, x_val, y_val);
             
             fprintf(phage_file, '%.6f \t %.6f \t', x_val, y_val);
@@ -31,7 +29,6 @@ function save_trajectories(xP_over_time, xB_over_time, xC_over_time, dt, N_steps
     fclose(phage_file); 
     
     %% Save Bacteria Positions to a .dat File
-    %bacteria_filename = 'bacteria_trajectories.dat';
     bacteria_filename = fullfile(outputFolder, 'trajectoriesBacteria.dat'); 
     bacteria_file = fopen(bacteria_filename, 'w'); 
 
@@ -59,7 +56,6 @@ function save_trajectories(xP_over_time, xB_over_time, xC_over_time, dt, N_steps
     %fprintf('Trajectories saved to %s\n', filename);
 
     %% Save Cluster Positions to a .dat File
-    %bacteria_filename = 'bacteria_trajectories.dat';
     clusters_filename = fullfile(outputFolder, 'trajectoriesClusters.dat'); 
     clusters_file = fopen(clusters_filename, 'w'); 
 
