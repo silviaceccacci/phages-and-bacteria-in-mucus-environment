@@ -29,7 +29,7 @@ y_min = min(mesh.X(:,2));
 y_max = max(mesh.X(:,2));
 clear mesh;
 
-load([case_name '_uInterp_1e-5'])
+load([case_name '_uInterp_1e-2'])
 
 Omega_X = x_max - x_min; 
 Omega_Y = y_max - y_min; 
@@ -37,7 +37,7 @@ domain = [Omega_X, Omega_Y];
 %% Numerical parameters
 disp('----> Read numerical and physical parameters')
 dt = 1e-4; 
-num_steps = 10; %10000;
+num_steps = 100; %10000;
 %% Physical parameters
 mu_water = 10^(-3);     % Dynamic viscosity (Pa s)
 rho_water = 10^3;       % Mass density of phage (kg/m^3)
@@ -50,7 +50,7 @@ rhoP = 10^5*rho_water;          % Mass density of phage (kg/m^3)
 d_enc1 = rP;                    % Encounter distance for pha-bac attachemnt (lyse)
 d_enc2 = rP/2;                  % Encounter distance for pha-bacInCl attachemnt (lyse)
 d_enc3 = rP/2;                  % Encounter distance for pha-COMcl attachemnt (lyse)
-num_phages = 100;
+num_phages = 400;
 for i = 1:num_phages
     phages(i) = Phage(rP, rhoP, mu_water, kB, T, domain, x_min, y_min, x_max, y_max);
     phages(i).id = i;
@@ -64,7 +64,7 @@ vB = 30 * micron;                       % Velocity of bacterium in run phase (m/
 omega_T = 0.5;                          % Tumble frequency (1/s)
 epsilon = 10 * kB * T;                  % Phage-bacteria iteraction strength
 crit_distance_bacteria = 1 * micron;    % Encounter distance for bacteria-bacteria attachemnt (biofilm formation)
-num_bacteria = 50;
+num_bacteria = 15;
 max_num_bacteria = num_bacteria;
 for i = 1:num_bacteria
     bacteria(i) = Bacterium(lB, wB, rhoB, mu_water, kB, T, dt, vB, omega_T, domain, ...
@@ -74,7 +74,9 @@ for i = 1:num_bacteria
 end
 %% Clusters
 disp('----> Initialise clusters at initial configuration')
-threshold = 0.5 * micron;
+D = 1e-12;
+threshold = compute_clustering_threshold(U_interp, x_min, x_max, y_min, y_max, lB, wB, dt, D);
+%threshold = 0.5 * micron;
 [clusters, bacteria] = Cluster.form_clusters(bacteria, threshold, domain, x_min, y_min, x_max, y_max);
 
 % Print formed clusters
