@@ -9,7 +9,6 @@ addpath('./output')
 disp('--------------------------------------------------------------------------------------------------------------')
 disp('TODO')
 disp(' - Particles solver:')
-disp('   - Missing save trajectory and plot of the bacteria in the clusters')
 disp('--------------------------------------------------------------------------------------------------------------')
 %% Define the folder to save all the files
 outputFolder = './output/';
@@ -29,7 +28,7 @@ y_min = min(mesh.X(:,2));
 y_max = max(mesh.X(:,2));
 clear mesh;
 
-load([case_name '_uInterp_1e-2'])
+load([case_name '_uInterp_1e-5'])
 
 Omega_X = x_max - x_min; 
 Omega_Y = y_max - y_min; 
