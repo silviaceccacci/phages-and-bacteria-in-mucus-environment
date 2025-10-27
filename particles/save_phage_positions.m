@@ -21,17 +21,6 @@ function phage_positions_over_time = save_phage_positions(phages, step_idx, phag
 %
 % ---------------------------------------------------------------
 
-    % Extract all phage positions as an N×2 matrix
-    %positionsP = reshape([phages.position], 2, []).';  % each row = [x, y]
-
-%     num_phages = length(phages);  % total fixed number
-%     positionsP = zeros(num_phages, 2);
-% 
-%     % Store positions by fixed ID
-%     for p = 1:num_phages
-%         positionsP(p, :) = phages(p).position(:)';  % always row vector
-%     end
-
     num_phages_total = size(phage_positions_over_time,2)/2;
     positionsP = NaN(num_phages_total,2);
 

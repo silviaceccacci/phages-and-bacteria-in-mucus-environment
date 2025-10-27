@@ -222,6 +222,7 @@ for k = 1:num_steps
         clusters(n).id = n;
     end
 
+    % Print formed clusters updated
     fprintf('At time t = %6f, formed clusters:\n', k*dt);
     for i = 1:length(clusters)
         fprintf('Cluster %d: %d bacteria\n', i, clusters(i).size);
@@ -272,22 +273,22 @@ for k = 1:num_steps
     writeVideo(video1, getframe(gcf));
 
     disp('-------> Save phages and bacteria positions')
-    xP_yP_matrix = [xP; yP];
-    xP_yP_row_fixed_time = reshape(xP_yP_matrix, [2*length(phages),1])';
-    coordP_over_time(k,:) = xP_yP_row_fixed_time;
+%     xP_yP_matrix = [xP; yP];
+%     xP_yP_row_fixed_time = reshape(xP_yP_matrix, [2*length(phages),1])';
+%     coordP_over_time(k,:) = xP_yP_row_fixed_time;
     
 %     xB_yB_matrix = [xB, xC; yB, yC];     %xB_yB_matrix = [xB;yB];
 %     xB_yB_row_fixed_time = reshape(xB_yB_matrix, [2*(length(positionsB)+length(all_bacteria)),1])';
 %     coordB_over_time(k,:) = xB_yB_row_fixed_time;
     
-    clusters_filtered = clusters([clusters.size] >= 2);
-    num_clusters_k = length(clusters_filtered);
-    xC_yC_matrix = NaN(2, num_clusters_k);  % [2 x num_clusters_k]
-    for c = 1:num_clusters_k
-        xC_yC_matrix(:, c) = clusters_filtered(c).position(:);
-    end
-    xC_yC_row_fixed_time = reshape(xC_yC_matrix, [2*num_clusters_k, 1])';
-    coordC_over_time(k, 1:length(xC_yC_row_fixed_time)) = xC_yC_row_fixed_time;
+%     clusters_filtered = clusters([clusters.size] >= 2);
+%     num_clusters_k = length(clusters_filtered);
+%     xC_yC_matrix = NaN(2, num_clusters_k);  % [2 x num_clusters_k]
+%     for c = 1:num_clusters_k
+%         xC_yC_matrix(:, c) = clusters_filtered(c).position(:);
+%     end
+%     xC_yC_row_fixed_time = reshape(xC_yC_matrix, [2*num_clusters_k, 1])';
+%     coordC_over_time(k, 1:length(xC_yC_row_fixed_time)) = xC_yC_row_fixed_time;
 
     phage_positions_over_time = save_phage_positions(phages, k, phage_positions_over_time);
     bact_positions_over_time = save_bacteria_positions(bacteria, k, bact_positions_over_time);

@@ -22,19 +22,6 @@ function cluster_positions_over_time = save_cluster_positions(clusters, step_idx
 %
 % ------------------------------------------------------------------
 
-    % Filter clusters with size >= 2
-%     clusters_filtered = clusters([clusters.size] >= 2);
-%     num_clusters_k = numel(clusters_filtered);
-% 
-%     % Pre-fill row with NaNs
-%     row = NaN(1, size(cluster_positions_over_time, 2));
-% 
-%     for c = 1:num_clusters_k
-%         pos = clusters_filtered(c).position(:); % 2x1
-%         idx = 2*c - 1;
-%         row(idx:idx+1) = pos;
-%     end
-
     max_num_clusters = size(cluster_positions_over_time,2)/2;
     row = NaN(1, 2*max_num_clusters);
 
@@ -49,18 +36,4 @@ function cluster_positions_over_time = save_cluster_positions(clusters, step_idx
     end
 
     cluster_positions_over_time(step_idx, :) = row;
-
-%     if num_clusters_k > 0
-%         % Extract COM positions into a 2×M matrix
-%         xC_yC_matrix = NaN(2, num_clusters_k);
-%         for c = 1:num_clusters_k
-%             xC_yC_matrix(:, c) = clusters_filtered(c).position(:);
-%         end
-% 
-%         % Flatten as [x1, y1, x2, y2, ...]
-%         xC_yC_row_fixed_time = reshape(xC_yC_matrix, [2*num_clusters_k, 1])';
-% 
-%         % Assign to current time step (preserve previous NaNs beyond current cluster count)
-%         cluster_positions_over_time(step_idx, 1:length(xC_yC_row_fixed_time)) = xC_yC_row_fixed_time;
-%     end
 end
