@@ -153,9 +153,11 @@ n_phages_vs_time = zeros(num_steps);
 %num_phages = length(phages);
 num_bacteria_total = 50;
 max_num_clusters = 15;  
+max_bacteria_per_cluster = 10; 
 phage_positions_over_time = zeros(num_steps, 2 * num_phages);
 bact_positions_over_time = zeros(num_steps, 2 * num_bacteria_total);
 cluster_positions_over_time = NaN(num_steps, 2 * max_num_clusters);
+bact_in_cluster_positions_over_time = NaN(num_steps, 2*num_bacteria_total);
 %% Time-stepping loop
 disp('----> Begin time iterations')
 tic
@@ -293,6 +295,8 @@ for k = 1:num_steps
     phage_positions_over_time = save_phage_positions(phages, k, phage_positions_over_time);
     bact_positions_over_time = save_bacteria_positions(bacteria, k, bact_positions_over_time);
     cluster_positions_over_time = save_cluster_positions(clusters, k, cluster_positions_over_time);
+    bact_in_cluster_positions_over_time = save_bacteriaInCluster_positions(clusters, k, ...
+        num_bacteria_total, bact_in_cluster_positions_over_time);
 end
 elapsed_time = toc; % end timer and get elapsed time
 fprintf('Total simulation time: %.2f seconds\n', elapsed_time);
@@ -302,13 +306,14 @@ time_vec = (0:num_steps-1) * dt;
 %plot_StokesBrinkmanFlow(U_interp, x_min, x_max, y_min, y_max, micron, Omega_X, Omega_Y);
 %plot_trajectories_2D(coordP_over_time, coordB_over_time, coordC_over_time, num_phages, num_bacteria, num_clusters_k, micron, Omega_X, Omega_Y);
 plot_trajectories_2D(phage_positions_over_time, bact_positions_over_time, cluster_positions_over_time, ...
-    num_phages, num_bacteria, max_num_clusters, micron, Omega_X, Omega_Y);
+    bact_in_cluster_positions_over_time, num_phages, num_bacteria, max_num_clusters, micron, Omega_X, Omega_Y);
 %save_trajectories(coordP_over_time, coordB_over_time, coordC_over_time, dt, num_steps, num_phages, num_bacteria, num_clusters_k, micron, outputFolder);
 save_phage_attachments(n_phages_vs_time, num_steps, dt, outputFolder);
 
 save(fullfile(outputFolder, 'phage_positions_over_time.txt'), 'phage_positions_over_time', '-ascii');
 save(fullfile(outputFolder, 'bact_positions_over_time.txt'), 'bact_positions_over_time', '-ascii');
 save(fullfile(outputFolder, 'cluster_positions_over_time.txt'), 'cluster_positions_over_time', '-ascii');
+save(fullfile(outputFolder, 'bact_in_cluster_positions_over_time.txt'), 'bact_in_cluster_positions_over_time', '-ascii');
 %save(fullfile(outputFolder, 'time_vec.txt'), 'time_vec', '-ascii');
 
 %plot_all_trajectories(phage_positions_over_time, bact_positions_over_time, cluster_positions_over_time, time_vec, outputFolder);

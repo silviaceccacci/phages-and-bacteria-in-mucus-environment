@@ -1,4 +1,5 @@
-function plot_trajectories_2D(xP_over_time, xB_over_time, xC_over_time, num_phages, num_bacteria, num_clusters, micron, Omega_x, Omega_y)
+function plot_trajectories_2D(xP_over_time, xB_over_time, xC_over_time, xBIC_over_time, ...
+    num_phages, num_bacteria, num_clusters, micron, Omega_x, Omega_y)
     % Function to plot the 2D trajectories of phages and bacteria over time
     figure;
     hold on;
@@ -21,6 +22,16 @@ function plot_trajectories_2D(xP_over_time, xB_over_time, xC_over_time, num_phag
         plot(xC_over_time(:,(j-1)*2 + 1) / micron, xC_over_time(:,j*2) / micron, 'k+');
     end
 
+    % Plot the 2D trajectories of the bacteria in clusters
+     for i = 1:num_bacteria
+        x = xBIC_over_time(:,2*i-1) / micron;
+        y = xBIC_over_time(:,2*i)   / micron;
+        if all(isnan(x)) && all(isnan(y))
+            continue; % skip if never in a cluster
+        end
+        plot(x, y, 'md', 'LineWidth', 1); % magenta solid
+    end
+
     % Formatting the plot
     xlabel('$\Omega_x \ (\mu m)$', 'Interpreter','LaTeX','FontSize',16);
     ylabel('$\Omega_y \ (\mu m)$', 'Interpreter','LaTeX','FontSize',16);
@@ -32,6 +43,6 @@ function plot_trajectories_2D(xP_over_time, xB_over_time, xC_over_time, num_phag
     grid on;
     hold off;
 
-    saveas(gcf, 'plot_2D_trajectories' ,'epsc'); 
+    %saveas(gcf, 'plot_2D_trajectories' ,'epsc'); 
 
 end
