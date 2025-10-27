@@ -22,7 +22,24 @@ function bact_positions_over_time = save_bacteria_positions(bacteria, step_idx, 
 % ---------------------------------------------------------------
 
     % Extract all bacteria positions as an N×2 matrix
-    positionsB = reshape([bacteria.position], 2, []).';  % each row = [x, y]
+    %positionsB = reshape([bacteria.position], 2, []).';  % each row = [x, y]
+
+%     num_bacteria = length(bacteria);  % total fixed number of bacteria
+%     positionsB = zeros(num_bacteria, 2);
+% 
+%     % Store positions by fixed ID
+%     for b = 1:num_bacteria
+%         positionsB(b, :) = bacteria(b).position(:)';  % always row vector
+%     end
+
+    % number of columns must match preallocation
+    num_bacteria_total = size(bact_positions_over_time,2)/2;
+    positionsB = NaN(num_bacteria_total,2);  % pre-fill NaNs
+
+    for b = 1:length(bacteria)
+        id = bacteria(b).id;  % each bacterium must have a unique fixed ID
+        positionsB(id, :) = bacteria(b).position(:)';
+    end
 
     % Flatten and assign to the current time step
     bact_positions_over_time(step_idx, :) = reshape(positionsB.', 1, []);
