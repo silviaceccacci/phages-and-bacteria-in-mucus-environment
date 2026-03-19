@@ -2,7 +2,7 @@ This code was developed by Abel Gargallo-Peiro and Silvia Ceccacci.
 
 Copyright (C) 2026 Abel Gargallo-Peiro and Silvia Ceccacci
 
-It was used for the work "Modelling the effect of mucus permeability in bacteriophages and bacteria attachments dynamics" by A. Gargallo-Peiro, L. Koens, G. Houzeaux and S. Ceccacci
+It was used for the work "Modelling the effect of mucus permeability in bacteriophages and bacteria attachments dynamics" by A. Gargallo-Peiro, G. Houzeaux, L. Koens and S. Ceccacci
 
 In this folder there are three main files which are needed to obtain the results of this work:
 
