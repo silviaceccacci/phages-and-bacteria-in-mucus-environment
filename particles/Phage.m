@@ -20,12 +20,14 @@ classdef Phage
     end
     
     methods
-        function p = Phage(rP, rhoP, mu_water, kB, T, domain, x_min, y_min, x_max, y_max)
+        function p = Phage(rP, rhoP, mu_water, kB, T, domain, ...
+                x_min, y_min, x_max, y_max, initial_position)
             p.radius = rP;
             p.mass = rhoP * 4/3 * pi * rP^3;
             p.friction_coefficient = 6 * pi * mu_water * rP;
             p.noise_amplitude = sqrt(2 * p.friction_coefficient * kB * T); 
-            p.position = rand(1, 2) .* domain; % Random initial position
+            %p.position = rand(1, 2) .* domain; % Random initial position
+            p.position = initial_position; 
             p.velocity = zeros(1, 2); % Initial velocity zero
             p.domain = domain;
             p.x_min = x_min;

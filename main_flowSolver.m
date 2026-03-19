@@ -14,7 +14,7 @@ disp('--------------------------------------------------------------------')
 parameters.case_name    = 'mucus1';
 parameters.umag_in      = 83.3*1e-6; % from some reference
 parameters.pressureGrad = -20  ; % -20 gradP gives aprox 83.3*1e-6 u_mag for some perme
-parameters.minDarcyNum  = 1e-5 ; % perme->0      : more resistance % adimensional, Darcy number
+parameters.minDarcyNum  = 1e-7 ; % perme->0      : more resistance % adimensional, Darcy number
 parameters.maxDarcyNum  = 1e14 ; % perme->infty  : no resistance   % adimensional, Darcy number
 %% Mesh
 disp('---------------------  Mesh and domain  ----------------------------')
@@ -65,3 +65,4 @@ disp('Setting interpolant...')
 [U_interp]=set_interpolant(mesh,solution.u,false,domain);
 
 save(['./output/' parameters.case_name '_uInterp'],"U_interp");
+save('flow_Da_1e-4.mat', 'x_coords', 'y_coords', 'u_velocity', 'v_velocity');

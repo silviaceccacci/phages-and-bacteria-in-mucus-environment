@@ -4,10 +4,12 @@ addpath('./input')
 addpath('./image2mesh/src')
 addpath_tools()
 
-%% Global variable to find BAMG
+%% Global variable to find adaptation tool (BAMG)
 global machine;
 %machine = 'abelm2';
 machine = 'silvia';
+
+do_adapt_mesh = false;
 
 %% Input files
 fileName = 'mucus1';
@@ -68,15 +70,6 @@ if(doPartOfImage)
 end
 
 figure; imshow(img); title('Original')
-
-%do_anisotropic_filter = false;
-% if(do_anisotropic_filter)
-%     figure(11), subplot 121, imshow(Z,[]), title('Ogirinal')
-%     num_iter = 5;
-%     delta_t = 1/7; kappa = 30; option = 1;
-%     Z = anisodiff2D(Z,num_iter,delta_t,kappa,option);
-%     subplot 122, imshow(Z,[]), title('Filtered')
-% end
 %% Periodic image
 if(doPeriodic)
     %img = [img  img(:,end:-1:1)];
@@ -102,7 +95,6 @@ if(doPeriodic)
     
 %     img = [img  img];
 %     img = [img ; img];
-
     figure; imshow(img); title('Periodic')
 end
 %% Filter
@@ -125,7 +117,6 @@ end
 % %     is_desired_density = abs(target_density-density_mucin)<1e-2;
 % % end
 % % density_mucin
-
 %% Structured mesh
 Z = img;
 
@@ -165,15 +156,16 @@ options.exportName = [fileName '_' int2str(iexport)];
 options.f = Z ;
 exportMeshParaview(X,T,options)
 
-adapt_variable.f = 1;
-sol.f = Z;
-[Xh,Th,sol] = adapt_multipleSol(X,T,data,adapt_variable,sol,doPeriodic);
-% Zh = interp2(x, y, img, Xh(:,1), Xh(:,2), 'linear');
-% size(Xh)
-% sol.f = Zh;
-% [Xh,Th,sol] = adapt_multipleSol(Xh,Th,data,adapt_variable,sol,doPeriodic);
-% size(Xh)
-Zh = sol.f;
+if(do_adapt_mesh) 
+    adapt_variable.f = 1;
+    sol.f = Z;
+    [Xh,Th,sol] = adapt_multipleSol(X,T,data,adapt_variable,sol,doPeriodic);
+    Zh = sol.f;
+else
+    Xh=X;
+    Th=T;
+    Zh=Z;
+end
 
 iexport = iexport+1;
 options.exportName = [fileName '_' int2str(iexport)];

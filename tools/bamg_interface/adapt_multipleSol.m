@@ -1,6 +1,6 @@
 function [Xh,Th,sol] = adapt_multipleSol(X,T,data,adapt_variable,sol,doPeriodic)
 
-    doClearTemps = false;
+    doClearTemps = true;
     path_temps = './image2mesh/temps/';
 
     %%

@@ -38,6 +38,8 @@ end
 UU_mag = sqrt(sum(UU.^2, 3));
 u_max = max(UU_mag(:));
 
+%u_max = 83.3e-6; %enforce Da=\infty
+
 % Compute clustering distance
 threshold = compute_clustering_distance(lB, wB, dt, D, u_max, Omega_X, Omega_Y);
 

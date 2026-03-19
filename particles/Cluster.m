@@ -43,7 +43,7 @@
             c.friction_coefficient = 6 * pi * mu * effective_radius;
         end
 
-        function c = update_center_of_mass_and_group_velocity(c)
+        function c = update_center_of_mass_and_group_velocity(c,domain)
             num_bacteria = length(c.bacteria);
             masses = zeros(num_bacteria, 1);
             positions = zeros(num_bacteria, 2);
@@ -57,6 +57,20 @@
 
             total_mass = sum(masses);
             center_of_mass = sum(positions.*masses, 1)/total_mass;
+%             id_x = find(positions(:,1)>domain(1)/2);
+%             id_y = find(positions(:,2)>domain(2)/2);
+%             positions(id_x,1) = positions(id_x,1) - domain(1);
+%             positions(id_y,2) = positions(id_y,2) - domain(2);
+% 
+%             center_of_mass = sum(positions.*masses, 1)/total_mass;
+%             id_xCOM = find(center_of_mass(:,1)<0);
+%             id_yCOM = find(center_of_mass(:,2)<0);
+%             center_of_mass(id_xCOM,1) = center_of_mass(id_xCOM,1) - domain(1);
+%             center_of_mass(id_yCOM,2) = center_of_mass(id_yCOM,2) - domain(2);
+
+            center_of_mass(:,1) = periodic_center_of_mass(positions(:,1),domain(1));
+            center_of_mass(:,2) = periodic_center_of_mass(positions(:,2),domain(2));
+
             c.position = center_of_mass;
             group_velocity = sum(velocities.*masses, 1)/total_mass;
             c.velocity = group_velocity;
@@ -141,6 +155,11 @@
                     for j = 1:num_bacteria
                         if ~visited(j) %if not visited
                             dist = norm(bacteriaList(current).position - bacteriaList(j).position);
+                            dist1 = norm(bacteriaList(current).position - bacteriaList(j).position + [domain(1),0]);
+                            dist2 = norm(bacteriaList(current).position - bacteriaList(j).position - [domain(1),0]);
+                            dist3 = norm(bacteriaList(current).position - bacteriaList(j).position + [0,domain(2)]);
+                            dist4 = norm(bacteriaList(current).position - bacteriaList(j).position - [0,domain(2)]);
+                            dist = min([dist,dist1,dist2,dist3,dist4]);
                             if dist < threshold
                                 visited(j) = true;
                                 group(end+1) = j;

@@ -25,15 +25,17 @@ classdef Bacterium
     end
     
     methods
-        function b = Bacterium(lB, wB, rhoB, mu_water, kB, T, dt, run_velocity, tumble_frequency, domain, x_min, y_min, x_max, y_max)
+        function b = Bacterium(lB, wB, rhoB, mu_water, kB, T, dt, run_velocity, ...
+                tumble_frequency, domain, x_min, y_min, x_max, y_max, initial_position)
             b.length = lB;
             b.width = wB;
             b.mass = rhoB * pi * lB * wB^2;
             b.friction_coefficient = 6 * pi * mu_water * wB;
-            b.noise_amplitude = sqrt(2 * b.friction_coefficient * kB * T); %divide by dt?
+            b.noise_amplitude = sqrt(2 * b.friction_coefficient * kB * T); 
             b.run_velocity = run_velocity;
             b.tumble_prob = tumble_frequency * dt; % Probability of a tumble in each time step
-            b.position = rand(1, 2) .* domain; % Random initial position
+            %b.position = rand(1, 2) .* domain; % Random initial position
+            b.position = initial_position; % Uniformly distributed positions
             b.velocity = zeros(1, 2); % Initial velocity zero
             b.phi = 0;
             b.flagellar_force = zeros(1, 2);

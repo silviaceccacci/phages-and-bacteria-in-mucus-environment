@@ -1,181 +1,171 @@
-function [phages, bacteria, attached_phages, n_phages_attached] = compute_attachments(phages, bacteria, clusters, max_num_bacteria, attached_phages, d_enc1, d_enc2, d_enc3, last_time_step, outputFolder)
+function [phages, bacteria, attached_phages, n_phages_attached] = compute_attachments_3(phages, bacteria, clusters, max_num_bacteria, attached_phages, ...
+    d_enc1, d_enc2, d_enc3, last_time_step, outputFolder)
 
 n_phages_attached = 0;
 attachment_info = cell(max_num_bacteria, 1);
-%     str = sprintf('num bacteria in fun1 = %d', num_bacteria);
-%     disp(str);
 
-for i = 1:length(phages) % Loop over each phage and each bacterium to check for attachment
-    flag = 0;
-    if ~attached_phages(i) % Only check unattached phages
-        %check attachment to single bacterium
-        for j = 1:length(bacteria)
-            distance = norm(phages(i).position - bacteria(j).position);
-            isAttached = (distance < d_enc1);
+phages_attached = find(attached_phages);
+phages_not_attached = find(~attached_phages);
 
-            if isAttached
-                n_phages_attached = n_phages_attached + 1;
-                %phages(i).relative_position_wrt_bact = phages(i).position - bacteria(j).position; %Delta = x1' - x1
-                %rel_pos = phages(i).relative_position_wrt_bact;
-                %phages(i).position = bacteria(j).position + rel_pos; %x1' = x1 + Delta
-                phages(i).position = bacteria(j).position;
+if isempty(phages_not_attached)
+    return;
+end
 
-                phages(i).velocity = bacteria(j).velocity;
-                phages(i).is_attached = true;
+if ~isempty(bacteria)
+    positions_bacteria = cat(1, bacteria.position);
+else
+    positions_bacteria = [];
+end
 
-                if ~ismember(phages(i).id, bacteria(j).phages_ids)
-                    bacteria(j).phages_ids(end+1) = phages(i).id;
-                end
-                %bacteria(j).phages_ids(end+1) = phages(i).id;
-                phages(i).attached_bacterium = bacteria(j).id;
+if ~isempty(clusters)
+    positions_COM = cat(1, clusters.position);
+else
+    positions_COM = [];
+end
 
-                % Record attachment info
-                if isempty(attachment_info{j})
-                    attachment_info{j} = i;
-                else
-                    attachment_info{j} = [attachment_info{j}, i];
-                end
+positions_phages = cat(1, phages(phages_not_attached).position);
 
-                attached_phages(i) = true;  % Mark the phage as attached
-                %disp('I should be attached in un batterio singolo')
-                flag = 1;
-                break;  % Break the loop to avoid reassigning the phage to another bacterium
-            end
+n_phages = length(phages_not_attached);
+n_clusters = length(clusters);
+
+if ~isempty(positions_bacteria)
+    D_bacteria = pdist2(positions_bacteria, positions_phages);
+    [min_D_bacteria, id_bacteria] = min(D_bacteria, [], 1);
+else
+    min_D_bacteria = inf(1, n_phages);
+    id_bacteria = zeros(1, n_phages);
+end
+
+if ~isempty(clusters)
+    D_bacteria_in_cluster = inf(n_clusters, n_phages);
+    idbac_bacteria_in_cluster = zeros(n_clusters, n_phages);
+    for local_i = 1:n_clusters
+        bacterias_cluster = clusters(local_i).bacteria;
+        if isempty(bacterias_cluster)
+            continue;
+        end
+        positions_bacteria_in_cluster = cat(1, bacterias_cluster.position);
+        [dist, iddd] = min(pdist2(positions_bacteria_in_cluster, positions_phages));
+        D_bacteria_in_cluster(local_i,:) = dist;
+        idbac_bacteria_in_cluster(local_i,:) = iddd;
+    end
+    [min_D_bacteria_in_cluster, id_bacteria_in_cluster] = min(D_bacteria_in_cluster, [], 1);
+else
+    min_D_bacteria_in_cluster = inf(1, n_phages);
+    id_bacteria_in_cluster = zeros(1, n_phages);
+end
+
+if ~isempty(positions_COM)
+    D_COM = pdist2(positions_COM, positions_phages);
+    [min_D_COM, id_COM] = min(D_COM, [], 1);
+else
+    min_D_COM = inf(1, n_phages);
+    id_COM = zeros(1, n_phages);
+end
+
+A = [min_D_bacteria./d_enc1; min_D_bacteria_in_cluster./d_enc2; min_D_COM./d_enc3];
+
+[min_D, id_particle] = min(A, [], 1);
+idx_phage_to_particle = find(min_D < 1);
+id_particle = id_particle(idx_phage_to_particle);
+
+%Attach phages to single bacteria
+if ~isempty(bacteria)
+    phages_to_bacteria = idx_phage_to_particle(id_particle == 1);
+    for k = 1:length(phages_to_bacteria)
+        local_i = phages_to_bacteria(k);
+        global_i = phages_not_attached(local_i);
+        j = id_bacteria(local_i);
+        if j < 1 || j > numel(bacteria)
+            continue; % skip invalid index
+        end
+        n_phages_attached = n_phages_attached + 1;
+        phages(global_i).position = bacteria(j).position;
+        phages(global_i).velocity = bacteria(j).velocity;
+        phages(global_i).is_attached = true;
+        phages(global_i).attached_bacterium = bacteria(j).id;
+
+        if ~ismember(phages(global_i).id, bacteria(j).phages_ids)
+            bacteria(j).phages_ids(end+1) = phages(global_i).id;
         end
 
-        %check attachment on bacteria in clusters
-        if flag == 0
-            for c = 1:length(clusters)
-                cluster = clusters(c);
-                bacteriaInCluster = cluster.bacteria;
-    
-                % Compute distances to all bacteria in the cluster
-                distances = arrayfun(@(bact) norm(phages(i).position - bact.position), bacteriaInCluster);
-    
-                % Find minimum distance and corresponding bacterium
-                [min_dist, idx] = min(distances);
-    
-                if min_dist < d_enc2
-                    n_phages_attached = n_phages_attached + 1;
-                    %phages(i).relative_position_wrt_bact = phages(i).position - bacteriaInCluster(idx).position;
-                    %rel_pos = phages(i).relative_position_wrt_bact;
-                    %phages(i).position = bacteriaInCluster(idx).position + rel_pos;
-                    phages(i).position = bacteriaInCluster(idx).position;
-                    %disp('Questa e la prima posizione del fago')
-                    %phages(i).position
-    
-                    phages(i).velocity = bacteriaInCluster(idx).velocity;
-                    phages(i).is_attached = true;
-                    phages(i).attached_bacterium = bacteriaInCluster(idx).id;
-                    %str = sprintf('id batterio nel cluster da funzione min_dist = %d', bacteriaInCluster(idx).id);
-                    %disp(str);
-    
-                    if isempty(attachment_info{c})
-                        attachment_info{c} = i;
-                    else
-                        attachment_info{c} = [attachment_info{c}, i];
-                    end
-    
-                    attached_phages(i) = true;
-                    %disp('I should be attached in un batterio nel cluster')
-                    flag = 1;
-                    break;
-                end
-    
-            end
+        if isempty(attachment_info{j})
+            attachment_info{j} = global_i;
+        else
+            attachment_info{j} = [attachment_info{j}, global_i];
         end
-
-        %check for attachment to cluster COM
-        if flag == 0
-            for c = 1:length(clusters)
-                clusterCOM = clusters(c).position;
-                %phages(i).relative_position_wrt_com = phages(i).position - clusterCOM;
-                %rel_pos = phages(i).relative_position_wrt_com;
-                clusterVel = clusters(c).velocity;
-    
-                dist_to_COM = norm(phages(i).position - clusterCOM);
-    
-                if dist_to_COM < d_enc3
-                    %phages(i).position = clusterCOM + rel_pos;
-                    phages(i).position = clusterCOM;
-    
-                    phages(i).velocity = clusterVel;
-                    phages(i).is_attached = true;
-                    %phages(i).attached_cluster = clusters(c).id;
-                    %str = sprintf('id cluster COM = %d', clusters(c).id);
-                    %disp(str);
-    
-                    if isempty(attachment_info{c})
-                        attachment_info{c} = i;
-                    else
-                        attachment_info{c} = [attachment_info{c}, i];
-                    end
-    
-                    attached_phages(i) = true;
-                    flag = 1;
-                    break;
-                end
-            end
-        end
-
-
-    else
-        id_of_bacteria_with_phage_i = phages(i).attached_bacterium;
-        %str = sprintf('id batterio con fago = %d', id_of_bacteria_with_phage_i);
-        %disp(str);
-        id_of_cluster_with_phage_i = phages(i).attached_cluster;
-        %str = sprintf('id cluster con fago in com = %d', id_of_cluster_with_phage_i);
-        %disp(str);
-        if id_of_bacteria_with_phage_i ~= -1
-            %disp('sono nella id del batterio')
-            [idx_bacteria, idx_cluster, in_cluster] = index_of_bacteria_with_id(clusters, bacteria, id_of_bacteria_with_phage_i);
-            if in_cluster == 0
-                %disp('il batterio sta da solo' )
-                phages(i).position = bacteria(idx_bacteria).position;
-                phages(i).velocity = bacteria(idx_bacteria).velocity;
-            end
-            if in_cluster == 1
-                %disp('il batterio sta nel cluster')
-                phages(i).position = clusters(idx_cluster).bacteria(idx_bacteria).position;
-                phages(i).velocity = clusters(idx_cluster).bacteria(idx_bacteria).velocity;
-                %disp('Questa e la posizione del fago dopo primo attachment')
-                %phages(i).position
-            end
-
-        end
-        if id_of_cluster_with_phage_i ~= -1
-            %disp('sono nel COM del cluster')
-            %[idx_COM] = index_of_clusters_with_id(clusters, id_of_cluster_with_phage_i);
-            [idx_COM] = find_closest_COM_to_phage(clusters, phages(i));
-            phages(i).position = clusters(idx_COM).position;
-            %str = sprintf('position of COM = %d', clusters(idx_COM).position);
-            %disp(str);
-            phages(i).velocity = clusters(idx_COM).velocity;
-
-        end
-
+        attached_phages(global_i) = true;
     end
 end
 
-% if last_time_step % Only print and save attachment info at the last time step
-%     filename = fullfile(outputFolder, 'attachmentsPhagesBacteria.dat');
-%     fileID = fopen(filename, 'w');
-% 
-%     %         str = sprintf('ciao ');
-%     %         disp(str);
-% 
-%     for j = 1:length(bacteria)
-%         if ~isempty(attachment_info{j})
-%             fprintf(fileID, '%d', bacteria(j).id);
-%             %                 str = sprintf('bacteria ID = %d', bacteria(j).id);
-%             %                 disp(str);
-%             fprintf(fileID, ', %d', attachment_info{j}); % Write attached phages
-%             fprintf(fileID, '\n');
-%         end
-%     end
-%     fclose(fileID);
-%     %fprintf('Attachment data saved to %s\n', filename);
-% end
+%Attach phages to bacteria inside clusters
+if ~isempty(clusters)
+    phages_to_bacteria_cluster = idx_phage_to_particle(id_particle == 2);
+    for k = 1:length(phages_to_bacteria_cluster)
+        local_i = phages_to_bacteria_cluster(k);
+        global_i = phages_not_attached(local_i);
+        c = id_bacteria_in_cluster(local_i);
+        if c < 1 || c > numel(clusters)
+            continue;
+        end
+        cluster = clusters(c);
+        bacteriaInCluster = cluster.bacteria;
+        if isempty(bacteriaInCluster)
+            continue;
+        end
+        j = idbac_bacteria_in_cluster(c, local_i);
+        if j < 1 || j > numel(bacteriaInCluster)
+            continue;
+        end
+        n_phages_attached = n_phages_attached + 1;
+        phages(global_i).position = bacteriaInCluster(j).position;
+        phages(global_i).velocity = bacteriaInCluster(j).velocity;
+        phages(global_i).is_attached = true;
+        phages(global_i).attached_bacterium = bacteriaInCluster(j).id;
+        attached_phages(global_i) = true;
+    end
+end
 
+%Attach phages to cluster COM 
+if ~isempty(clusters)
+    phages_to_COM = idx_phage_to_particle(id_particle == 3);
+    for k = 1:length(phages_to_COM)
+        local_i = phages_to_COM(k);
+        global_i = phages_not_attached(local_i);
+        j = id_COM(local_i);
+        if j < 1 || j > numel(clusters)
+            continue;
+        end
+        phages(global_i).position = clusters(j).position;
+        phages(global_i).velocity = clusters(j).velocity;
+        phages(global_i).is_attached = true;
+        attached_phages(global_i) = true;
+    end
+end
+
+%Update already attached phages
+for k = 1:length(phages_attached)
+    local_i = phages_attached(k);
+    id_of_bacteria_with_phage_i = phages(local_i).attached_bacterium;
+    id_of_cluster_with_phage_i = phages(local_i).attached_cluster;
+
+    if id_of_bacteria_with_phage_i ~= -1 && ~isempty(bacteria)
+        [idx_bacteria, idx_cluster, in_cluster] = ...
+            index_of_bacteria_with_id(clusters, bacteria, id_of_bacteria_with_phage_i);
+        if in_cluster == 0
+            phages(local_i).position = bacteria(idx_bacteria).position;
+            phages(local_i).velocity = bacteria(idx_bacteria).velocity;
+        elseif in_cluster == 1
+            phages(local_i).position = clusters(idx_cluster).bacteria(idx_bacteria).position;
+            phages(local_i).velocity = clusters(idx_cluster).bacteria(idx_bacteria).velocity;
+        end
+    end
+
+    if id_of_cluster_with_phage_i ~= -1 && ~isempty(clusters)
+        [idx_COM] = find_closest_COM_to_phage(clusters, phages(local_i));
+        phages(local_i).position = clusters(idx_COM).position;
+        phages(local_i).velocity = clusters(idx_COM).velocity;
+    end
+end
 
 end
