@@ -8,6 +8,8 @@ switch lower(machine)
         bamg_exe = '!/usr/local/ff++/mpich3/bin/bamg';
     case 'silvia'
         bamg_exe = '!/usr/local/ff++/mpich3/bin/bamg';
+    case 'jose'
+        bamg_exe = '!"C:\Program Files (x86)\FreeFem++\bamg.exe"';
     otherwise
         error('get_bamg_exe: not known machine')
 end

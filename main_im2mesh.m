@@ -7,9 +7,10 @@ addpath_tools()
 %% Global variable to find adaptation tool (BAMG)
 global machine;
 %machine = 'abelm2';
-machine = 'silvia';
+%machine = 'silvia';
+machine = 'jose';
 
-do_adapt_mesh = false;
+do_adapt_mesh = true;
 
 %% Input files
 fileName = 'mucus1';
@@ -143,13 +144,15 @@ if(do_exportInitialImage)
 end
 %% Adapted mesh
 threshold_mucus = mean(Z)*percentage_image_to_consider_mucin;
+% optional threshold calculus to obtain lower mucin densities
+%threshold_mucus = max(Z)*0.6; 
 fact_tanh = 100;
 Z = Z-threshold_mucus;
 Z = tanh(Z*fact_tanh);
 
 total_area = sum(ones(size(Z)));
 mucin_area = sum((1+Z)/2);
-density_mucin = mucin_area/total_area
+density_mucin = mucin_area/total_area;
 
 iexport = iexport+1;
 options.exportName = [fileName '_' int2str(iexport)];
