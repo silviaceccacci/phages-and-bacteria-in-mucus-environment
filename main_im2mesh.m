@@ -7,8 +7,8 @@ addpath_tools()
 %% Global variable to find adaptation tool (BAMG)
 global machine;
 %machine = 'abelm2';
-machine = 'silvia';
-
+%machine = 'silvia';
+machine = 'jose';
 do_adapt_mesh = false;
 
 %% Input files
