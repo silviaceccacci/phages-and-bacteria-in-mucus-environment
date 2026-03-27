@@ -9,7 +9,7 @@ global machine;
 %machine = 'abelm2';
 %machine = 'silvia';
 machine = 'jose';
-do_adapt_mesh = false;
+do_adapt_mesh = true;
 
 %% Input files
 fileName = 'mucus1';
@@ -149,7 +149,7 @@ Z = tanh(Z*fact_tanh);
 
 total_area = sum(ones(size(Z)));
 mucin_area = sum((1+Z)/2);
-density_mucin = mucin_area/total_area
+density_mucin = mucin_area/total_area;
 
 iexport = iexport+1;
 options.exportName = [fileName '_' int2str(iexport)];
