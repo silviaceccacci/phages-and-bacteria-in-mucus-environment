@@ -126,7 +126,7 @@ if channels > 1
 end
 
 %% Thresholding and tanh smoothing
-threshold_mucus = max(Z(:)) * 0.6; % threshold to consider what is mucin and what is not
+threshold_mucus = max(Z(:)) * 0.65; % threshold to consider what is mucin and what is not
 fact_tanh = 100;
 Z_smooth = tanh((double(Z) - threshold_mucus) * fact_tanh);  % 2D, values in [-1, 1]
 
@@ -260,9 +260,16 @@ fprintf('Density of mucin (solid fraction): %.4f\n', density_mucin)
 if(doPeriodic)
     mesh.X = Xh;
     mesh.T = Th;
-    mesh= makePeriodicMesh(mesh,hmin);
+    mesh = makePeriodicMeshStokes(mesh,hmin);
     isPeriodic = checkPeriodicity(mesh);
 end
+
+%% Export per periodic fluid mesh
+iexport = iexport + 1;
+options.exportName = [fileName '_' int2str(iexport)];
+options.f = ones(size(mesh.X, 1), 1); % just to check if the geometry is correct
+exportMeshParaview(mesh.X, mesh.T, options)
+
 %% Save mesh
 x_max = max(mesh.X(:,1));
 mesh.X = mesh.X*scale/x_max;
