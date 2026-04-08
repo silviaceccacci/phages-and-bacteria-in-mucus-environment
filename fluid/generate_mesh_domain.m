@@ -14,14 +14,17 @@ if(do_mesh_from_image)
     fprintf('Domain:      [%4.2e %4.2e]x[%4.2e %4.2e]\n',domain.x_LL,domain.x_LR,domain.y_LD,domain.y_LU)
  
     % Set permeability:
-    perme = mesh.perme; % from image
-
-    min_p = min(perme);
-    max_p = max(perme);
-    minDarcyNum=parameters.minDarcyNum;
-    maxDarcyNum=parameters.maxDarcyNum;
-    factPerme = (maxDarcyNum-minDarcyNum)/(max_p-min_p);
-    perme = minDarcyNum + (perme-min_p)*factPerme;
+    if(isfield(mesh,'perme'))
+        perme = mesh.perme; % from image
+        min_p = min(perme);
+        max_p = max(perme);
+        minDarcyNum=parameters.minDarcyNum;
+        maxDarcyNum=parameters.maxDarcyNum;
+        factPerme = (maxDarcyNum-minDarcyNum)/(max_p-min_p);
+        perme = minDarcyNum + (perme-min_p)*factPerme;
+    else
+        perme = ones(size(mesh.X,1),1);
+    end
     model.perme = perme;
     clear perme;
 else

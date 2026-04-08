@@ -20,12 +20,12 @@ if(isStructured)
 else
     if(    nfields==1)
 
-        F = scatteredInterpolant(mesh_in.X(:,1), mesh_in.X(:,2), f_in, 'linear', 'none');
+        F = scatteredInterpolant(mesh_in.X(:,1), mesh_in.X(:,2), f_in, 'linear', 'nearest');
         F_interp = @(x)( F( y1(x,adim,L,x0,Lx),y2(x,adim,L,x0,Ly) ) );
 
     elseif(nfields==2)
-        F1 = scatteredInterpolant(mesh_in.X(:,1), mesh_in.X(:,2), f_in(:,1), 'linear', 'none');
-        F2 = scatteredInterpolant(mesh_in.X(:,1), mesh_in.X(:,2), f_in(:,2), 'linear', 'none');
+        F1 = scatteredInterpolant(mesh_in.X(:,1), mesh_in.X(:,2), f_in(:,1), 'linear', 'nearest');
+        F2 = scatteredInterpolant(mesh_in.X(:,1), mesh_in.X(:,2), f_in(:,2), 'linear', 'nearest');
         F1_interp = @(x)( F1(y1(x,adim,L,x0,Lx),y2(x,adim,L,x0,Ly)) );
         F2_interp = @(x)( F2(y1(x,adim,L,x0,Lx),y2(x,adim,L,x0,Ly)) );
         F_interp = @(x)([F1_interp(x),F2_interp(x)]);

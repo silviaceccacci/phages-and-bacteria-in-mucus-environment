@@ -86,16 +86,21 @@ if(isPeriodic)
         map_to_master_v = 1:nOfNodes;
         map_to_master_p = 1:nOfNodes; 
 
-        corner_slaves = [cornerLB;cornerLT;cornerRT];
-        corner_master = [cornerRB;cornerRB;cornerRB];
-        periodic_map(cornerLB)=cornerRB;
-        periodic_map(cornerLT)=cornerRB;
-        periodic_map(cornerRT)=cornerRB;
+        if(isempty(cornerLB)==false)
+            corner_slaves = [cornerLB;cornerLT;cornerRT];
+            corner_master = [cornerRB;cornerRB;cornerRB];
+            periodic_map(cornerLB)=cornerRB;
+            periodic_map(cornerLT)=cornerRB;
+            periodic_map(cornerRT)=cornerRB;
+        else
+            corner_slaves = [];
+            corner_master = [];
+        end
+
         map_to_master_v(corner_slaves) = corner_master;
         if(parameters.BC.periodic.p.leftRight)
             map_to_master_p(corner_slaves) = corner_master;
-        end
-
+        end       
         slaves_periodic = node_to_dofs(corner_slaves);
         master_periodic = node_to_dofs(corner_master);
        

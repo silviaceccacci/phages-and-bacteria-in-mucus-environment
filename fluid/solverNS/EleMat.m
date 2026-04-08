@@ -55,9 +55,10 @@ for igaus = 1:ngaus
     % Contribution to element matrices
     Ke = Ke + nu*(Nx'*Nx+Ny'*Ny)*dvolu; 
     Ng = [reshape([1;0]*N_igaus,1,ndofn); reshape([0;1]*N_igaus,1,ndofn)];
-    Me = nu/perme*(Ng'*Ng)*dvolu;
-    %Ke = Ke - Me; 
-    Ke = Ke + Me;
+    if(perme>-eps)
+        Me = nu/perme*(Ng'*Ng)*dvolu;
+        Ke = Ke + Me;
+    end
 
     Ge = Ge - NP_ig'*dN*dvolu; 
     
