@@ -16,6 +16,7 @@ parameters.pressureGrad = -20 ;       % -20 gradP gives aprox 83.3*1e-6 u_mag
 parameters.minDarcyNum = 1e-2;  %1e-3; % perme->0      : more resistance % adimensional, Darcy number
 parameters.maxDarcyNum = 1e14; % perme->infty  : no resistance   % adimensional, Darcy number
 %parameters.pressureGrad = 0.5*1/minDarcyNum ;       % -20 gradP gives aprox 83.3*1e-6 u_mag
+parameters.BC.noSlipWalls = true;   % set false to skip no-slip on mucin
 % -----Solver:
 parameters.is_parall  = true;
 if(parameters.is_parall) 

@@ -126,7 +126,7 @@ if channels > 1
 end
 
 %% Thresholding and tanh smoothing
-threshold_mucus = max(Z(:)) * 0.65; % threshold to consider what is mucin and what is not
+threshold_mucus = max(Z(:)) * 0.7; % threshold to consider what is mucin and what is not
 fact_tanh = 100;
 Z_smooth = tanh((double(Z) - threshold_mucus) * fact_tanh);  % 2D, values in [-1, 1]
 
@@ -176,30 +176,48 @@ T = node_map(T);
 fluid_indices        = find(fluid_mask);
 fluid_mask           = false(size(fluid_mask));
 fluid_mask(fluid_indices(used_nodes)) = true;
+
+%% Remove fluid regions entirely enclosed by mucin (disconnected islands)
+% Find the largest connected fluid component and discard the rest
+
+% Build node adjacency from triangle connectivity
+n_nodes = size(X, 1);
+adj = sparse([T(:,1); T(:,2); T(:,3); T(:,1); T(:,2); T(:,3)], ...
+             [T(:,2); T(:,3); T(:,1); T(:,3); T(:,1); T(:,2)], ...
+             ones(6*size(T,1), 1), n_nodes, n_nodes);
+
+% Find connected components
+G_graph      = graph(adj);
+component_id = conncomp(G_graph);
+n_components = max(component_id);
+fprintf('Connected fluid components found: %d\n', n_components);
+
+% Keep only the largest component
+comp_sizes   = accumarray(component_id', 1);
+[~, main_comp] = max(comp_sizes);
+keep_nodes   = find(component_id == main_comp);
+
+fprintf('Removing %d trapped fluid nodes\n', n_nodes - length(keep_nodes));
+
+% Build node map and filter
+node_map_cc            = zeros(n_nodes, 1);
+node_map_cc(keep_nodes) = 1:length(keep_nodes);
+
+% Remove triangles with any node outside the main component
+keep_elems = all(node_map_cc(T) > 0, 2);
+T          = node_map_cc(T(keep_elems, :));
+X          = X(keep_nodes, :);
+
+% Update fluid_mask accordingly
+fluid_indices2         = find(fluid_mask);
+fluid_mask             = false(size(fluid_mask));
+fluid_mask(fluid_indices2(keep_nodes)) = true;
+
 %% Export fluid-only mesh (pre-adaptation)
 iexport = iexport + 1;
 options.exportName = [fileName '_' int2str(iexport)];
 options.f = Z_smooth(fluid_mask);      % fluid nodes only, matches X
 exportMeshParaview(X, T, options)
-
-%% Identify boundary edges
-all_edges  = [T(:,[1,2]); T(:,[2,3]); T(:,[1,3])];
-all_edges  = sort(all_edges, 2);
-[uniq_edges, ~, ic] = unique(all_edges, 'rows');
-edge_count = accumarray(ic, 1);
-boundary_edges = uniq_edges(edge_count == 1, :);
-
-on_image_border = ( X(boundary_edges(:,1), 1) == 0     | ...
-                    X(boundary_edges(:,1), 1) == (n-1) | ...
-                    X(boundary_edges(:,1), 2) == 0     | ...
-                    X(boundary_edges(:,1), 2) == (m-1) | ...
-                    X(boundary_edges(:,2), 1) == 0     | ...
-                    X(boundary_edges(:,2), 1) == (n-1) | ...
-                    X(boundary_edges(:,2), 2) == 0     | ...
-                    X(boundary_edges(:,2), 2) == (m-1) );
-
-solid_wall_edges   = boundary_edges(~on_image_border, :);
-domain_inlet_edges = boundary_edges( on_image_border, :);
 
 %% Adapted mesh refinement driven by distance to mucin wall
 dist_to_mucin = bwdist(~is_fluid);
@@ -226,36 +244,6 @@ options.exportName = [fileName '_' int2str(iexport)];
 options.f = Zh;
 exportMeshParaview(Xh, Th, options)
 
-%% Calculate new count of boundary edges and compare it to pre-adaptation
-all_edges_h    = [Th(:,[1,2]); Th(:,[2,3]); Th(:,[1,3])];
-all_edges_h    = sort(all_edges_h, 2);
-[uniq_edges_h, ~, ic_h] = unique(all_edges_h, 'rows');
-edge_count_h   = accumarray(ic_h, 1);
-boundary_edges_h = uniq_edges_h(edge_count_h == 1, :);
-
-on_image_border_h = ( Xh(boundary_edges_h(:,1), 1) == 0     | ...
-                      Xh(boundary_edges_h(:,1), 1) == (n-1) | ...
-                      Xh(boundary_edges_h(:,1), 2) == 0     | ...
-                      Xh(boundary_edges_h(:,1), 2) == (m-1) | ...
-                      Xh(boundary_edges_h(:,2), 1) == 0     | ...
-                      Xh(boundary_edges_h(:,2), 1) == (n-1) | ...
-                      Xh(boundary_edges_h(:,2), 2) == 0     | ...
-                      Xh(boundary_edges_h(:,2), 2) == (m-1) );
-
-solid_wall_edges_h   = boundary_edges_h(~on_image_border_h, :);
-domain_inlet_edges_h = boundary_edges_h( on_image_border_h, :);
-
-fprintf('--- Pre-adaptation ---\n')
-fprintf('  Boundary edges (domain):       %d\n', size(domain_inlet_edges, 1))
-fprintf('  Solid wall edges (mucin wall): %d\n', size(solid_wall_edges, 1))
-fprintf('--- Post-adaptation ---\n')
-fprintf('  Boundary edges (domain):       %d\n', size(domain_inlet_edges_h, 1))
-fprintf('  Solid wall edges (mucin wall): %d\n', size(solid_wall_edges_h, 1))
-
-fprintf('Num nodes: %d\n', size(Xh, 1))
-fprintf('Num elems: %d\n', size(Th, 1))
-fprintf('Density of mucin (solid fraction): %.4f\n', density_mucin)
-
 %% Force periodicity
 if(doPeriodic)
     mesh.X = Xh;
@@ -264,11 +252,30 @@ if(doPeriodic)
     isPeriodic = checkPeriodicity(mesh);
 end
 
-%% Export per periodic fluid mesh
+%% Export periodic fluid mesh
 iexport = iexport + 1;
 options.exportName = [fileName '_' int2str(iexport)];
 options.f = ones(size(mesh.X, 1), 1); % just to check if the geometry is correct
 exportMeshParaview(mesh.X, mesh.T, options)
+
+%% Identify solid wall nodes on the FINAL mesh (after periodicity)
+tol_bnd = 1e-10;
+xmin = min(mesh.X(:,1));  xmax = max(mesh.X(:,1));
+ymin = min(mesh.X(:,2));  ymax = max(mesh.X(:,2));
+
+all_edges_final  = [mesh.T(:,[1,2]); mesh.T(:,[2,3]); mesh.T(:,[1,3])];
+all_edges_final  = sort(all_edges_final, 2);
+[uniq_edges_f, ~, ic_f] = unique(all_edges_final, 'rows');
+edge_count_f = accumarray(ic_f, 1);
+bdry_nodes_f = unique(uniq_edges_f(edge_count_f == 1, :));
+
+on_rect_f = abs(mesh.X(bdry_nodes_f,1) - xmin) < tol_bnd | ...
+            abs(mesh.X(bdry_nodes_f,1) - xmax) < tol_bnd | ...
+            abs(mesh.X(bdry_nodes_f,2) - ymin) < tol_bnd | ...
+            abs(mesh.X(bdry_nodes_f,2) - ymax) < tol_bnd;
+
+mesh.solid_wall_nodes = bdry_nodes_f(~on_rect_f);
+fprintf('Solid wall nodes identified: %d\n', length(mesh.solid_wall_nodes));
 
 %% Save mesh
 x_max = max(mesh.X(:,1));

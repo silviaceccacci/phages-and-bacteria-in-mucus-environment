@@ -143,6 +143,7 @@ if(do_exportInitialImage)
 end
 %% Adapted mesh
 threshold_mucus = mean(Z)*percentage_image_to_consider_mucin;
+threshold_mucus = max(Z(:)) * 0.6; % threshold to consider what is mucin and what is not
 fact_tanh = 100;
 Z = Z-threshold_mucus;
 Z = tanh(Z*fact_tanh);
@@ -150,6 +151,7 @@ Z = tanh(Z*fact_tanh);
 total_area = sum(ones(size(Z)));
 mucin_area = sum((1+Z)/2);
 density_mucin = mucin_area/total_area;
+fprintf('Density of the mucin: %.4f\n', density_mucin);
 
 iexport = iexport+1;
 options.exportName = [fileName '_' int2str(iexport)];

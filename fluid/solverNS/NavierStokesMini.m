@@ -90,11 +90,19 @@ elseif(do_dirichletLeft && do_dirichletTopBot==false)
     prescribedValues = uCCD;
     prescribedDOF    = dofsCCD;
 elseif(do_dirichletLeft==false && do_dirichletTopBot==false)
-    nodesCCD = [];
-    prescribedValues = zeros(0,1);
-    prescribedDOF    = zeros(0,1);
-else
-    error('not considered bc')
+    if isfield(parameters.BC,'noSlipWalls') && parameters.BC.noSlipWalls ...
+            && isfield(mesh,'solid_wall_nodes')
+        nodesCCD         = mesh.solid_wall_nodes;
+        prescribedDOF    = [nodesCCD; nodesCCD + nOfNodes];
+        prescribedValues = zeros(2*length(nodesCCD), 1);
+        u0(nodesCCD, :)  = 0;
+        disp('  No-slip BC applied on mucin walls')
+    else
+        nodesCCD         = [];
+        prescribedValues = zeros(0,1);
+        prescribedDOF    = zeros(0,1);
+        disp('  No BC on mucin walls (free slip)')
+    end
 end
 clear x; clear y;
 
