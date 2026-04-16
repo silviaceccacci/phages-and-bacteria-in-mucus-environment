@@ -1,7 +1,12 @@
 function [] = exportMeshParaviewSolver(mesh,options)
 
-X=mesh.Xp;
-T=mesh.Tp;
+if isfield(mesh, 'Xp')
+    X = mesh.Xp;
+    T = mesh.Tp;
+else
+    X = mesh.X;
+    T = mesh.T;
+end
 
 if(isfield(options,'name')) 
     exportName = options.name;
