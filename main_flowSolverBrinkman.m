@@ -11,7 +11,7 @@ disp(' - iterate on flow to set proper pressure for mean flow')
 disp('--------------------------------------------------------------------')
 %% PARAMETERS: (move to function?)
 [parameters,model]=set_default_parameters_model();
-parameters.case_name    = 'mucus1';
+parameters.case_name    = 'slice_2D_XY';
 parameters.umag_in      = 83.3*1e-6; % from some reference
 parameters.pressureGrad = -20  ; % -20 gradP gives aprox 83.3*1e-6 u_mag for some perme
 parameters.minDarcyNum  = 1e-7 ; % perme->0      : more resistance % adimensional, Darcy number
@@ -59,6 +59,14 @@ else
     umean            = computeMeanVel(mesh,domain,solution);
     fprintf('Mean velocity: %8.2e\n',umean)
 end
+
+% Export the rescaled solution
+opt_out = solution;
+opt_out.name = ['./output/paraview/' parameters.case_name '_sol_rescaled'];
+opt_out.k    = model.perme;
+opt_out.m    = solution.node_marks;
+exportMeshParaviewSolver(mesh,opt_out);
+
 %% Build interp
 disp('---------------------  Interpolant ---------------------------------')
 disp('Setting interpolant...')

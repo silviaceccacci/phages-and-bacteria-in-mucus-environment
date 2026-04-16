@@ -60,6 +60,14 @@ else
     umean            = computeMeanVel(mesh,domain,solution);
     fprintf('Mean velocity: %8.2e\n',umean)
 end
+
+% Export the rescaled solution
+opt_out = solution;
+opt_out.name = ['./output/paraview/' parameters.case_name '_sol_rescaled'];
+opt_out.k    = model.perme;
+opt_out.m    = solution.node_marks;
+exportMeshParaviewSolver(mesh,opt_out);
+
 %% Build interp
 disp('---------------------  Interpolant ---------------------------------')
 disp('Setting interpolant...')
