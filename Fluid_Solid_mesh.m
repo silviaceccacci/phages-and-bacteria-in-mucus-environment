@@ -12,7 +12,7 @@ machine = 'jose';
 do_adapt_mesh = true;
 
 %% Input files
-fileName = 'PSD_topography';
+fileName = 'slice_2D_XZ';
 format = 'png';
 
 doPeriodic = true;
@@ -58,7 +58,7 @@ img = im2double(img); % Normalize the image values between 0 and 1
 % RGB = double(imread(imageName)); 
 img = img(:,:,1);
 
-img = img(1:end-5,5:1050,:); % to remove croped things
+%img = img(1:end-5,5:1050,:); % to remove croped things
 
 fprintf('Size of image: %d %d\n',size(img))
 
@@ -126,7 +126,7 @@ if channels > 1
 end
 
 %% Thresholding and tanh smoothing
-threshold_mucus = max(Z(:)) * 0.7; % threshold to consider what is mucin and what is not
+threshold_mucus = max(Z(:)) * 0.9; % threshold to consider what is mucin and what is not
 fact_tanh = 100;
 Z_smooth = tanh((double(Z) - threshold_mucus) * fact_tanh);  % 2D, values in [-1, 1]
 
@@ -284,4 +284,3 @@ mesh.X = mesh.X*scale/x_max;
 save(['./output/' fileName '_mesh'],"mesh")
 %text_density = int2str(round(density_mucin*100));
 %save(['./out/' fileName '_mesh'],"mesh")
-
