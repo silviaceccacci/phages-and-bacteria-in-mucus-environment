@@ -12,7 +12,7 @@ machine = 'jose';
 do_adapt_mesh = true;
 
 %% Input files
-fileName = 'mucus1';
+fileName = 'slice_2D_XZ';
 format = 'png';
 
 doPeriodic = true;
@@ -58,7 +58,7 @@ img = im2double(img); % Normalize the image values between 0 and 1
 % RGB = double(imread(imageName)); 
 img = img(:,:,1);
 
-img = img(1:end-5,5:1050,:); % to remove croped things
+%img = img(1:end-5,5:1050,:); % to remove croped things
 
 fprintf('Size of image: %d %d\n',size(img))
 
@@ -143,7 +143,7 @@ if(do_exportInitialImage)
 end
 %% Adapted mesh
 threshold_mucus = mean(Z)*percentage_image_to_consider_mucin;
-threshold_mucus = max(Z(:)) * 0.6; % threshold to consider what is mucin and what is not
+threshold_mucus = max(Z(:)) * 0.9; % threshold to consider what is mucin and what is not
 fact_tanh = 100;
 Z = Z-threshold_mucus;
 Z = tanh(Z*fact_tanh);
@@ -205,4 +205,3 @@ mesh.perme = perme;
 save(['./output/' fileName '_mesh'],"mesh")
 %text_density = int2str(round(density_mucin*100));
 %save(['./out/' fileName '_mesh'],"mesh")
-

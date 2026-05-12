@@ -7,11 +7,11 @@ clc; clear all; close all;
 addpath('./input')
 
 %% --- 1. Domain Dimensions & Voxel Resolution ---
-M = 1000;       % X dimension (nm)
+M = 5000;       % X dimension (nm)
 N = 1000;       % Y dimension (nm)
 L_z = 15000;    % Z dimension (nm)
 
-voxel_size = 2.5; % 1 voxel = 1 nm (Adjust this based on your mesher's needs)
+voxel_size = 5; % 1 voxel = 1 nm (Adjust this based on your mesher's needs)
 grid_X = round(M / voxel_size);
 grid_Y = round(N / voxel_size);
 grid_Z = round(L_z / voxel_size);
@@ -24,7 +24,7 @@ r_vox = radius_nm / voxel_size; % Radius in voxel units
 
 num_steps = floor(strand_len / kuhn_len); 
 peak_mucin_fraction = 0.05; 
-lambda = 2000;              
+lambda = 5000;              
 
 % Calculate strands (Using a correction factor to overcome bleed/overlap)
 strand_vol = strand_len * (pi * radius_nm^2); 

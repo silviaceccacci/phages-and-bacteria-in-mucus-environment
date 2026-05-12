@@ -7,11 +7,11 @@ clc; clear all; close all;
 addpath('./input')
 
 %% --- 1. Domain Dimensions & Voxel Resolution ---
-M = 5000;       % X dimension (nm)
-N = 5000;       % Y dimension (nm)
+M = 5500;       % X dimension (nm)
+N = 4300;       % Y dimension (nm)
 L_z = 500;     % Z dimension (nm) - Reduced to a cube for faster uniform generation
 
-voxel_size = 2.5; % 1 voxel = 2.5 nm
+voxel_size = 5; % 1 voxel = 5 nm
 grid_X = round(M / voxel_size);
 grid_Y = round(N / voxel_size);
 grid_Z = round(L_z / voxel_size);
@@ -23,7 +23,7 @@ radius_nm = 5.0;    % Cylinder radius
 r_vox = radius_nm / voxel_size; % Radius in voxel units
 
 num_steps = floor(strand_len / kuhn_len); 
-peak_mucin_fraction = 0.05; % Target uniform density
+peak_mucin_fraction = 0.36; % Target uniform density
 
 % Calculate strands for a UNIFORM volume
 strand_vol = strand_len * (pi * radius_nm^2); 

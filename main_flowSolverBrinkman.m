@@ -11,11 +11,12 @@ disp(' - iterate on flow to set proper pressure for mean flow')
 disp('--------------------------------------------------------------------')
 %% PARAMETERS: (move to function?)
 [parameters,model]=set_default_parameters_model();
-parameters.case_name    = 'slice_2D_XY';
+parameters.case_name    = 'slice_2D_XZ';
 parameters.umag_in      = 83.3*1e-6; % from some reference
 parameters.pressureGrad = -20  ; % -20 gradP gives aprox 83.3*1e-6 u_mag for some perme
-parameters.minDarcyNum  = 1e-7 ; % perme->0      : more resistance % adimensional, Darcy number
+parameters.minDarcyNum  = 1e-4 ; % perme->0      : more resistance % adimensional, Darcy number
 parameters.maxDarcyNum  = 1e14 ; % perme->infty  : no resistance   % adimensional, Darcy number
+parameters.BC.noSlipWalls = false;   % true: no-slip (u=0 on mucin surfaces) , false: free-slip
 %% Mesh
 disp('---------------------  Mesh and domain  ----------------------------')
 do_mesh_from_image  = true;
@@ -74,3 +75,4 @@ disp('Setting interpolant...')
 
 save(['./output/' parameters.case_name '_uInterp'],"U_interp");
 save('flow_Da_1e-4.mat', 'x_coords', 'y_coords', 'u_velocity', 'v_velocity');
+

@@ -15,7 +15,7 @@ disp('----> Read domain parameters')
 micron = 1e-6;
 nano = 1e-9;
 
-case_name = 'mucus1';
+case_name = 'slice_2D_XZ';
 load([case_name '_mesh'])
 x_min = min(mesh.X(:,1));
 x_max = max(mesh.X(:,1));
@@ -23,7 +23,7 @@ y_min = min(mesh.X(:,2));
 y_max = max(mesh.X(:,2));
 clear mesh;
 
-load([case_name '_uInterp_1e-4'])
+load([case_name '_uInterp'])
 
 Omega_X = x_max - x_min;
 Omega_Y = y_max - y_min;
@@ -31,7 +31,7 @@ domain = [Omega_X, Omega_Y];
 %% Numerical parameters
 disp('----> Read numerical and physical parameters')
 dt = 1e-4;
-num_steps = 20; %num_steps=60000 to obtain results for t=6sec
+num_steps = 60000; %num_steps=60000 to obtain results for t=6sec
 %% Physical parameters
 mu_water = 10^(-3);     % Dynamic viscosity (Pa s)
 rho_water = 10^3;       % Mass density of phage (kg/m^3)
@@ -46,7 +46,7 @@ d_enc2 = rP/2;                  % Encounter distance for pha-bacInCl attachemnt 
 d_enc3 = rP/2;                  % Encounter distance for pha-COMcl attachemnt (lyse)
 num_phages = 400;
 
-phages_pos = generate_periodic_grid(20, 20, Omega_X, Omega_Y);
+phages_pos = generate_periodic_grid(10, 40, Omega_X, Omega_Y);
 phages_pos = phages_pos(1:400,:);
 
 for i = 1:num_phages
@@ -65,7 +65,7 @@ crit_distance_bacteria = 1 * micron;    % Encounter distance for bacteria-bacter
 num_bacteria = 15;
 max_num_bacteria = num_bacteria;
 
-bact_pos = generate_periodic_grid(5, 3, Omega_X, Omega_Y);  
+bact_pos = generate_periodic_grid(3, 5, Omega_X, Omega_Y);  
 bact_pos = bact_pos(1:num_bacteria,:);
 
 for i = 1:num_bacteria

@@ -14,7 +14,7 @@ disp('--------------------------------------------------------------------')
 parameters.case_name    = 'PSD_topography';
 parameters.umag_in      = 83.3*1e-6; % from some reference
 parameters.pressureGrad = -20  ; % -20 gradP gives aprox 83.3*1e-6 u_mag for some perme
-parameters.minDarcyNum  = 1e-7 ; % perme->0      : more resistance % adimensional, Darcy number
+parameters.minDarcyNum  = 1e-4 ; % perme->0      : more resistance % adimensional, Darcy number
 parameters.maxDarcyNum  = 1e14 ; % perme->infty  : no resistance   % adimensional, Darcy number
 parameters.BC.noSlipWalls = true;   % true: no-slip (u=0 on mucin surfaces) , false: free-slip
 %% Mesh
